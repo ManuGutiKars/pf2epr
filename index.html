@@ -279,6 +279,12 @@
   }
 
   /* ---- Ficha ---- */
+  .ficha-grants{margin:8px 0 12px; padding:8px 12px; border-radius:6px; background:var(--accent-soft); border-left:3px solid var(--accent);}
+  .ficha-grant{display:flex; flex-wrap:wrap; gap:2px 12px; align-items:baseline; padding:3px 0;}
+  .ficha-grant-t{font-family:'Cinzel',serif; font-size:12px; color:var(--accent); min-width:120px;}
+  .ficha-grant-n{font-weight:600;}
+  .ficha-grant-o{font-size:13px; font-style:italic; color:var(--ink-soft);}
+  .ficha-grant.missing .ficha-grant-n{color:#8a3a3a;}
   .ficha-slots-table{display:flex; flex-direction:column; gap:3px; margin:8px 0;}
   .ficha-slots-row{display:grid; grid-template-columns:110px 70px 1fr; gap:10px; align-items:baseline; padding:5px 8px; border-radius:5px; border-bottom:1px solid rgba(51,38,25,0.08);}
   .ficha-slots-row.full{background:var(--accent-soft);}
@@ -828,6 +834,7 @@
     known = loadKnown();
     chosenFeats = loadChosenFeats();
     ficha = loadFicha();
+    syncGrants();
     updatePrepCount();
     updateKnownCount();
     render();
@@ -851,6 +858,7 @@
     known = loadKnown();
     chosenFeats = loadChosenFeats();
     ficha = loadFicha();
+    syncGrants();
     updatePrepCount();
     updateKnownCount();
     render();
@@ -901,6 +909,7 @@
     known = loadKnown();
     chosenFeats = loadChosenFeats();
     ficha = loadFicha();
+    syncGrants();
     updatePrepCount();
     updateKnownCount();
     render();
@@ -1046,6 +1055,7 @@
   function chosenInFicha(){
     var out = {};
     Object.keys(ficha.dotes).forEach(function(k){ var d = ficha.dotes[k]; if(d) out[d.id] = k; });
+    ((ficha.auto && ficha.auto.dotes) || []).forEach(function(id){ if(!out[id]) out[id] = 'auto'; });
     return out;
   }
   function slotCandidates(s){
@@ -1108,7 +1118,7 @@
   }
   function detailBox(html){ var d = el('div','spell-detail ficha-detail'); d.innerHTML = html; return d; }
   function rarLabel(r){ return r && r !== 'Común' ? ' (' + r.toLowerCase() + ')' : ''; }
-  function change(fn){ fn(); saveFicha(); render(); }
+  function change(fn){ fn(); syncGrants(); saveFicha(); render(); }
 
   function boostRow(label, selected, need, isAllowed, onToggle, lockedKeys, note){
     var row = el('div','ficha-boost-row');
@@ -1230,6 +1240,7 @@
         });
       });
     }
+    if(c) renderGrantsBox(sC);
     main.appendChild(sC);
 
     // ---- Atributos ----
@@ -1879,6 +1890,113 @@
       (mineHere.length ? ' · de esta lista tienes: ' + escapeHtml(mineHere.map(function(sp){ return sp.name; }).join(', ')) : ' · marca con ✦ los que tengas')));
   }
 
+  // ---- Dotes y conjuros que concede la clase / subclase ----
+  function normName(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’'`´]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
+  function tokenSim(a, b){
+    var A = a.split(' ').filter(Boolean), B = b.split(' ').filter(Boolean);
+    if(!A.length || !B.length) return 0;
+    var inter = A.filter(function(x){ return B.indexOf(x) !== -1; }).length;
+    return inter / Math.max(A.length, B.length);
+  }
+  // Busca un conjuro por su nombre en español (o inglés si la lista lo tiene)
+  function matchSpell(list, g){
+    var link = ficha.vinculos && ficha.vinculos[g.en];
+    if(link){ var l = list.filter(function(sp){ return String(sp.id) === String(link); })[0]; if(l) return l; }
+    var es = normName(g.nombre), en = normName(g.en);
+    var best = null, bestS = 0;
+    for(var i = 0; i < list.length; i++){
+      var sp = list[i];
+      if(sp.game === 'sf' || sp.source === 'Starfinder') continue;
+      var n = normName(sp.name);
+      if(n === es || n === en || normName(sp.en || sp.name_en || sp.nameEn || '') === en) return sp;
+      var s = Math.max(tokenSim(n, es), tokenSim(n, en));
+      if(s > bestS){ bestS = s; best = sp; }
+    }
+    return bestS >= 0.75 ? best : null;
+  }
+  function matchFeat(g){
+    var es = normName(g.nombre);
+    var c = FEATS.filter(function(f){ return f.game !== 'sf' && normName(f.name) === es; });
+    var cl = fClase();
+    return c.filter(function(f){ return cl && f.category === cl.categoriaDotes; })[0] || c.filter(function(f){ return f.group === 'skill'; })[0] || c[0] || null;
+  }
+  // Lista de lo concedido, con su origen y si se ha encontrado en los datos
+  function activeGrants(){
+    var c = fClase(); if(!c) return [];
+    var out = [];
+    (c.concede || []).forEach(function(g){ out.push({g: g, origen: c.nombre}); });
+    (c.subclases || []).forEach(function(sub){
+      (ficha.subclases[sub.tipo] || []).forEach(function(en){
+        var o = findBy(sub.opciones, 'en', en);
+        if(o) (o.concede || []).forEach(function(g){ out.push({g: g, origen: sub.etiqueta + ' ' + o.nombre}); });
+      });
+    });
+    var ci = casterInfo();
+    return out.filter(function(x){
+      if((x.g.nivel || 1) > ficha.nivel) return false;
+      if(x.g.tipo === 'conjuro' && ci && x.g.rango > ci.maxRank) return false;
+      return true;
+    }).map(function(x){
+      var item = null;
+      if(x.g.tipo === 'dote') item = matchFeat(x.g);
+      else if(x.g.tipo === 'foco') item = matchSpell(FOCUS_SPELLS, x.g);
+      else item = matchSpell(SPELLS.filter(function(sp){ return !ci || !ci.key || sp.school === ci.key; }), x.g);
+      return {g: x.g, origen: x.origen, item: item};
+    });
+  }
+  // Marca automáticamente lo concedido (✓ dotes elegidas, ✦ conjuros) y desmarca lo que ya no toca
+  function syncGrants(){
+    if(!BASE || !FEATS.length) return;
+    if(!ficha.auto) ficha.auto = {dotes:[], conjuros:[]};
+    var now = {dotes:[], conjuros:[]};
+    activeGrants().forEach(function(x){
+      if(!x.item) return;
+      if(x.g.tipo === 'dote') now.dotes.push(String(x.item.id)); else now.conjuros.push(String(x.item.id));
+    });
+    var changedF = false, changedK = false;
+    ficha.auto.dotes.forEach(function(id){ if(now.dotes.indexOf(id) === -1 && chosenFeats[id]){ delete chosenFeats[id]; changedF = true; } });
+    ficha.auto.conjuros.forEach(function(id){ if(now.conjuros.indexOf(id) === -1 && known[id]){ delete known[id]; changedK = true; } });
+    now.dotes.forEach(function(id){ if(!chosenFeats[id]){ chosenFeats[id] = true; changedF = true; } });
+    now.conjuros.forEach(function(id){ if(!known[id]){ known[id] = true; changedK = true; } });
+    ficha.auto = now;
+    if(changedF) saveChosenFeats(chosenFeats);
+    if(changedK){ saveKnown(known); updateKnownCount(); }
+    saveFicha();
+  }
+  function isAutoFeat(id){ return !!(ficha.auto && ficha.auto.dotes.indexOf(String(id)) !== -1); }
+
+  function renderGrantsBox(parent){
+    var list = activeGrants();
+    if(!list.length) return;
+    var TIPO = {dote:'Dote', foco:'Conjuro de foco', conjuro:'Conjuro'};
+    var box = el('div','ficha-grants');
+    box.appendChild(el('div','ficha-boost-label','Te concede automáticamente'));
+    list.forEach(function(x){
+      var row = el('div','ficha-grant' + (x.item ? '' : ' missing'));
+      var extra = x.g.tipo === 'conjuro' ? ' (' + (x.g.rango === 0 ? 'truco' : 'rango ' + x.g.rango) + ')' : '';
+      row.innerHTML = '<span class="ficha-grant-t">' + TIPO[x.g.tipo] + '</span>' +
+        '<span class="ficha-grant-n">' + escapeHtml(x.item ? x.item.name : x.g.nombre) + extra + '</span>' +
+        '<span class="ficha-grant-o">' + escapeHtml(x.origen) + (x.g.nivel > 1 ? ' · nivel ' + x.g.nivel : '') +
+        (x.item ? ' · ' + (x.g.tipo === 'dote' ? 'marcada ✓' : 'marcado ✦') : ' · no encontrado en tu lista («' + escapeHtml(x.g.en) + '»)') + '</span>';
+      box.appendChild(row);
+      var linked = ficha.vinculos && ficha.vinculos[x.g.en];
+      if(x.g.tipo !== 'dote' && (!x.item || linked)){
+        var ci = casterInfo(), fi = focusInfo();
+        var cands = x.g.tipo === 'foco'
+          ? FOCUS_SPELLS.filter(function(sp){ return sp.game !== 'sf' && (!fi.fc || sp.classKey === fi.fc.key); })
+          : SPELLS.filter(function(sp){ return sp.source !== 'Starfinder' && (!ci || sp.school === ci.key) && sp.rank === x.g.rango; });
+        cands = cands.slice().sort(function(a,b){ return a.name.localeCompare(b.name,'es'); });
+        var r2 = el('div','ficha-slot');
+        r2.appendChild(el('span','ficha-slot-l', linked ? 'Vinculado a mano' : 'Elegir cuál es'));
+        r2.appendChild(makeSelect(cands.map(function(sp){ return {value:String(sp.id), label:sp.name}; }), linked ? String(linked) : null, '— buscar en tu lista —', function(v){
+          change(function(){ ficha.vinculos = ficha.vinculos || {}; if(v) ficha.vinculos[x.g.en] = v; else delete ficha.vinculos[x.g.en]; });
+        }));
+        box.appendChild(r2);
+      }
+    });
+    parent.appendChild(box);
+  }
+
   // ---- Exportar / importar la ficha ----
   function exportFicha(name){
     var f = loadJSON(charStorageKeyFicha(name), null);
@@ -1984,6 +2102,7 @@
       known = loadKnown();
       chosenFeats = loadChosenFeats();
       ficha = loadFicha();
+      syncGrants();
       updatePrepCount();
       updateKnownCount();
       render();
@@ -2923,6 +3042,7 @@
     RITUALS = results[2];
     FEATS = results[3];
     migrateFeatsFromPrepared();
+    syncGrants();
     renderClassNav();
     renderFeatSkillNav();
     updatePrepCount();
