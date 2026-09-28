@@ -1281,6 +1281,7 @@
     renderSkillsSection(main);
     renderEquipoSection(main);
     renderConjurosSection(main);
+    renderFocoSection(main);
 
     // ---- Resumen ----
     if(a && c){
@@ -1305,7 +1306,7 @@
         stat('Reflejos', 'ref', 'des') +
         stat('Voluntad', 'vol', 'sab') +
         stat('CD de clase', 'cd', null, 10) +
-        (c.conjuros ? stat('Ataque de conjuros', 'conj', null) + stat('CD de conjuros', 'conj', null, 10) : '') +
+        (c.conjuros ? stat('Ataque de conjuros', 'conj', castAttr(c)) + stat('CD de conjuros', 'conj', castAttr(c), 10) : '') +
         '<div class="ficha-stat"><span class="ficha-stat-v">' + (a.velocidad + armorInfo(m).speedPen) + '</span><span class="ficha-stat-l">Velocidad (pies)</span><span class="ficha-stat-r">' + escapeHtml(a.tamano.join(', ')) + '</span></div>';
       sR.appendChild(stats);
       if(!clave) sR.appendChild(el('div','ficha-note','Elige el atributo clave de la clase para calcular la CD de clase.'));
@@ -1776,6 +1777,106 @@
       ' · ' + escapeHtml(ci.marca) + ': ' + escapeHtml(parts.join(' · ')));
     main.appendChild(box);
     return {ci: ci, mk: mk};
+  }
+
+  // ---- Conjuros de foco ----
+  function normKey(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]/g, ''); }
+  var FOCUS_ALIASES = {Magus:['magus','magoespada','magodeespada','magodebatalla'], Witch:['bruja','brujo'], Kineticist:['cineticista','cinetista','kineticista'],
+                       Summoner:['invocador'], Exemplar:['ejemplar'], Runesmith:['herrerorunico']};
+  function focusClassFor(c){
+    if(!c) return null;
+    var cands = [normKey(c.nombre)].concat(FOCUS_ALIASES[c.id] || []);
+    return CLASSES.filter(function(k){ return cands.indexOf(normKey(k.label)) !== -1 || cands.indexOf(normKey(k.key)) !== -1; })[0] || null;
+  }
+  function isFocusCantrip(sp){
+    if(/truco|cantrip/i.test(sp.rankLabel || '')) return true;
+    return (sp.traits || []).some(function(t){ return /^(truco|cantrip)$/i.test(t); });
+  }
+  // Atributo con el que se lanzan los conjuros de foco (si no es el atributo clave)
+  var FOCUS_ATTR = {Champion:'car', Monk:'sab', Ranger:'sab', Magus:'int'};
+  function castAttr(c){ return c ? ({Magus:'int'}[c.id] || null) : null; }
+  function focusInfo(){
+    var c = fClase();
+    var mine = FOCUS_SPELLS.filter(function(sp){ return sp.game !== 'sf' && (known[sp.id] || prepared[sp.id]); });
+    var spells = mine.filter(function(sp){ return !isFocusCantrip(sp); });
+    var cantrips = mine.filter(isFocusCantrip);
+    var puntos = Math.min(3, spells.length);
+    var fc = focusClassFor(c);
+    var hasClassFocus = fc ? FOCUS_SPELLS.some(function(sp){ return sp.classKey === fc.key; }) : false;
+    return {clase: c, fc: fc, hasClassFocus: hasClassFocus, spells: spells, cantrips: cantrips, puntos: puntos,
+            rango: Math.max(1, Math.ceil(ficha.nivel / 2))};
+  }
+  function focusCasting(fi){
+    var c = fi.clase; if(!c) return null;
+    var mod = computeAttrs().mod;
+    var attr = FOCUS_ATTR[c.id] || (claveOptions(c).length === 1 ? claveOptions(c)[0] : ficha.mejoras.clase);
+    if(!attr) return null;
+    var r = Math.max(rankAt(c, 'conj'), (fi.spells.length || fi.cantrips.length) ? 1 : 0);
+    var b = mod[attr] + profBonus(r);
+    return {attr: attr, rank: r, atk: b, cd: 10 + b};
+  }
+  function classLabelForKey(key){ var k = CLASSES.filter(function(x){ return x.key === key; })[0]; return k ? k.label : key; }
+  function goToFocus(key){
+    currentClass = key;
+    var tab = document.querySelector('#mainTabs [data-tab="focus"]');
+    if(tab) tab.click(); else render();
+    renderClassNav();
+    window.scrollTo(0, 0);
+  }
+
+  function renderFocoSection(main){
+    var fi = focusInfo();
+    if(!fi.hasClassFocus && !fi.spells.length && !fi.cantrips.length) return;
+    var sF = section('Conjuros de foco');
+    var cast = focusCasting(fi);
+    var stats = el('div','ficha-stats');
+    stats.innerHTML =
+      '<div class="ficha-stat"><span class="ficha-stat-v">' + fi.puntos + '</span><span class="ficha-stat-l">Puntos de foco</span><span class="ficha-stat-r">1 por conjuro de foco (máx. 3)</span></div>' +
+      '<div class="ficha-stat"><span class="ficha-stat-v">' + fi.rango + '.º</span><span class="ficha-stat-l">Rango</span><span class="ficha-stat-r">mitad del nivel, redondeando hacia arriba</span></div>' +
+      (cast ? '<div class="ficha-stat"><span class="ficha-stat-v">' + fmtMod(cast.atk) + '</span><span class="ficha-stat-l">Ataque de conjuros</span><span class="ficha-stat-r">' + ATR_NAME[cast.attr] + ' · ' + PROF_LABEL[cast.rank] + '</span></div>' +
+              '<div class="ficha-stat"><span class="ficha-stat-v">' + cast.cd + '</span><span class="ficha-stat-l">CD de conjuros</span><span class="ficha-stat-r">' + ATR_NAME[cast.attr] + ' · ' + PROF_LABEL[cast.rank] + '</span></div>' : '');
+    sF.appendChild(stats);
+    function listBlock(title, arr){
+      if(!arr.length) return;
+      var by = {};
+      arr.forEach(function(sp){ (by[sp.classKey] = by[sp.classKey] || []).push(sp); });
+      var box = el('div','ficha-slots-table');
+      Object.keys(by).forEach(function(k){
+        var row = el('div','ficha-slots-row');
+        row.innerHTML = '<span class="ficha-slots-r">' + escapeHtml(classLabelForKey(k)) + '</span><span class="ficha-slots-n">' + by[k].length + '</span>' +
+          '<span class="ficha-slots-l">' + by[k].sort(function(a,b){ return a.name.localeCompare(b.name,'es'); }).map(function(sp){ return escapeHtml(sp.name); }).join(', ') + '</span>';
+        box.appendChild(row);
+      });
+      sF.appendChild(el('div','ficha-boost-label', title));
+      sF.appendChild(box);
+    }
+    listBlock('Conjuros de foco', fi.spells);
+    listBlock('Trucos de foco (no dan puntos de foco)', fi.cantrips);
+    if(!fi.spells.length && !fi.cantrips.length){
+      sF.appendChild(el('div','ficha-note','Aún no has marcado ningún conjuro de foco. Márcalos con ✦ (o ✓) en la pestaña «Conjuros de foco».'));
+    }
+    if(fi.spells.length > 3) sF.appendChild(el('div','ficha-note','Tienes más de 3 conjuros de foco: la reserva no puede pasar de 3 puntos.'));
+    sF.appendChild(el('div','ficha-note','Recuperas 1 punto de foco al Reenfocar (10 minutos) y todos tras descansar 8 horas y hacer tus preparativos diarios.'));
+    if(fi.fc){
+      var go = el('button','char-btn ficha-add','Ir a los conjuros de foco de ' + escapeHtml(fi.fc.label));
+      go.addEventListener('click', function(){ goToFocus(fi.fc.key); });
+      sF.appendChild(go);
+    }
+    main.appendChild(sF);
+  }
+
+  // Barra en la pestaña Conjuros de foco
+  function focusCasterBanner(main, classDef){
+    if(gameMode === 'sf') return;
+    var fi = focusInfo();
+    if(!fi.clase) return;
+    var mineHere = fi.spells.concat(fi.cantrips).filter(function(sp){ return sp.classKey === classDef.key; });
+    var isMyClass = fi.fc && fi.fc.key === classDef.key;
+    if(!isMyClass && !mineHere.length) return;
+    main.appendChild(el('div','ficha-caster-bar',
+      '<b>' + escapeHtml(activeCharacter) + '</b> · ' + escapeHtml(fi.clase.nombre) + ' de nivel ' + ficha.nivel +
+      ' · puntos de foco ' + fi.puntos + '/3 · rango ' + fi.rango + '.º' +
+      (mineHere.length ? ' · de esta lista tienes: ' + escapeHtml(mineHere.map(function(sp){ return sp.name; }).join(', ')) : ' · marca con ✦ los que tengas')));
   }
 
   // ---- Exportar / importar la ficha ----
@@ -2279,7 +2380,7 @@
     refreshCasterCounts();
   }
   function refreshCasterCounts(){
-    if(mainTab !== 'spells' || !document.querySelector('.ficha-caster-bar')) return;
+    if((mainTab !== 'spells' && mainTab !== 'focus') || !document.querySelector('.ficha-caster-bar')) return;
     var y = window.scrollY; render(); window.scrollTo(0, y);
   }
 
@@ -2317,6 +2418,7 @@
     banner.className = 'school-banner';
     banner.innerHTML = '<div class="icon">'+classDef.glyph+'</div><div><h2>'+classDef.label+'</h2><p>'+(classDef.tagline||'')+'</p></div>';
     main.appendChild(banner);
+    focusCasterBanner(main, classDef);
 
     var pool = FOCUS_SPELLS.filter(function(sp){ return sp.classKey === classDef.key; })
                             .filter(function(sp){ return gameMode === 'sf' || sp.game !== 'sf'; })
