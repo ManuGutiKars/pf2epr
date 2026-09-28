@@ -282,42 +282,107 @@
   #printSheet{display:none;}
   .ficha-print-btn{margin:-8px 0 14px;}
   @media print{
-    @page{size:A4; margin:10mm;}
+    @page{size:A4; margin:8mm;}
     body > *:not(#printSheet){display:none !important;}
-    body{background:#fff !important; color:#000 !important;}
+    html, body{background:#fff !important; color:#000 !important;}
     body::before, body::after{display:none !important;}
-    #printSheet{display:block; font-family:'EB Garamond', Georgia, serif; font-size:10pt; color:#000; line-height:1.25;}
+    #printSheet{display:block;}
   }
-  #printSheet .ps-head{display:flex; justify-content:space-between; gap:12px; border-bottom:2px solid #000; padding-bottom:4px; margin-bottom:6px;}
-  #printSheet .ps-name{font-family:'Cinzel', serif; font-size:20pt; font-weight:700;}
-  #printSheet .ps-sub{font-size:11pt; font-weight:600;}
-  #printSheet .ps-sub2{font-size:9.5pt; font-style:italic;}
-  #printSheet .ps-meta{text-align:right; font-size:9pt;}
-  #printSheet .ps-attrs{display:grid; grid-template-columns:repeat(6,1fr); gap:4px; margin:4px 0;}
-  #printSheet .ps-attr{border:1.5px solid #000; border-radius:6px; text-align:center; padding:2px 0;}
-  #printSheet .ps-attr-c{font-family:'Cinzel',serif; font-size:8pt;}
-  #printSheet .ps-attr-v{font-size:15pt; font-weight:700;}
-  #printSheet .ps-row{display:grid; grid-template-columns:repeat(8,1fr); gap:4px; margin:4px 0 6px;}
-  #printSheet .ps-box{border:1px solid #000; border-radius:5px; text-align:center; padding:2px 2px 3px;}
-  #printSheet .ps-box-v{font-size:13pt; font-weight:700;}
-  #printSheet .ps-box-v small{font-size:8pt; font-weight:400;}
-  #printSheet .ps-box-l{font-size:8pt; font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
-  #printSheet .ps-box-s{font-size:7.5pt; font-style:italic;}
-  #printSheet .ps-cols{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-  #printSheet .ps-sec{break-inside:avoid; margin-bottom:6px;}
-  #printSheet .ps-sec h3{font-family:'Cinzel',serif; font-size:10pt; margin:0 0 2px; border-bottom:1px solid #000;}
-  #printSheet .ps-tbl{width:100%; border-collapse:collapse; font-size:9pt;}
-  #printSheet .ps-tbl td, #printSheet .ps-tbl th{padding:1px 3px; border-bottom:1px solid #ccc; vertical-align:top; text-align:left;}
-  #printSheet .ps-tbl th{font-size:8pt; text-transform:uppercase;}
-  #printSheet .ps-tbl tr.tr td{font-weight:600;}
-  #printSheet .ps-tbl .num{text-align:right; white-space:nowrap;}
-  #printSheet .ps-tbl small, #printSheet .ps-list small{font-size:7.5pt; color:#333;}
-  #printSheet .ps-note{font-size:8pt; font-style:italic; margin:1px 0 2px;}
-  #printSheet .ps-list{font-size:9pt;}
-  #printSheet .ps-empty{color:#999;}
-  #printSheet .ps-lines{height:40px; background:repeating-linear-gradient(#fff 0 17px, #bbb 17px 18px);}
-  #printSheet .ps-lines.tall{height:110px;}
-  #printSheet .ps-foot{margin-top:6px; font-size:7.5pt; text-align:right; color:#555;}
+  #printSheet{--g:#1f3b2d; --b:#6a2a1c; --line:#8b5a4a; font-family:'EB Garamond', Georgia, serif; font-size:8.6pt; color:#111; line-height:1.15;}
+  #printSheet .hj-page{width:194mm; min-height:279mm; position:relative; page-break-after:always; break-after:page; box-sizing:border-box; padding-bottom:6mm;}
+  #printSheet .hj-page:last-child{page-break-after:auto; break-after:auto;}
+  #printSheet .hj-t{display:flex; align-items:center; gap:4px; margin:3px 0 2px;}
+  #printSheet .hj-t span{font-family:'Cinzel',serif; font-weight:700; font-size:8.5pt; color:var(--g); letter-spacing:.04em; text-transform:uppercase; white-space:nowrap;}
+  #printSheet .hj-t::after{content:""; flex:1; height:2.2px; background:var(--g);}
+  #printSheet .hj-f{border:1px solid var(--b); border-radius:2px; padding:1px 3px; min-height:9mm; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;}
+  #printSheet .hj-fv{font-size:9.5pt; font-weight:600;}
+  #printSheet .hj-fv.small{font-size:8pt; font-weight:400;}
+  #printSheet .hj-fl{font-size:6.8pt; color:#555; border-top:1px solid #ddd;}
+  #printSheet .hj-f.tall{min-height:13mm;} #printSheet .hj-f.tall2{min-height:22mm;}
+  #printSheet .hj-f small, #printSheet .hj-fv small{font-weight:400; font-size:7.5pt;}
+  #printSheet .grow{flex:1;}
+  #printSheet .hj-big{font-family:'Cinzel',serif; font-size:14pt;}
+  #printSheet .hj-head{display:grid; grid-template-columns:60mm 1fr 30mm 34mm; gap:3mm; align-items:start;}
+  #printSheet .hj-brand-a{font-family:'Cinzel Decorative','Cinzel',serif; font-size:20pt; font-weight:700; color:var(--b); letter-spacing:.02em;}
+  #printSheet .hj-brand-b{font-family:'Cinzel',serif; font-size:9pt; font-weight:700; color:var(--b); text-transform:uppercase;}
+  #printSheet .hj-star{width:15mm; height:15mm; margin:0 auto; clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%); background:var(--b); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12pt;}
+  #printSheet .hj-px{font-size:7pt; text-align:center;} #printSheet .hj-px span{display:inline-block; width:14mm; border-bottom:1px solid #000;}
+  #printSheet .hj-hex{display:flex; gap:2mm; justify-content:center;} #printSheet .hj-hex i{width:7mm; height:7mm; border:1.5px solid var(--b); clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%); background:#fff; box-shadow:inset 0 0 0 1.5px var(--b);}
+  #printSheet .hj-g3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:3mm;}
+  #printSheet .hj-row2{display:flex; gap:2mm; align-items:stretch; flex-wrap:nowrap;} #printSheet .hj-row2 > *{flex:1;}
+  #printSheet .hj-attrs{display:grid; grid-template-columns:repeat(6,1fr); gap:2mm;}
+  #printSheet .hj-attr{display:flex; gap:2mm; align-items:center;}
+  #printSheet .hj-attr-box{width:10mm; height:9mm; border:2px solid var(--g); border-radius:3px 3px 8px 8px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11pt;}
+  #printSheet .hj-attr-n{font-family:'Cinzel',serif; font-weight:700; font-size:9pt;}
+  #printSheet .hj-attr-p{font-size:7pt;} #printSheet .hj-attr-p i, #printSheet .hj-trad i{display:inline-block; width:2.4mm; height:2.4mm; border:1px solid #000; border-radius:50%; margin-right:1mm; vertical-align:-0.3mm;}
+  #printSheet i.on{background:#000;}
+  #printSheet .hj-rk{display:inline-grid; grid-template-columns:repeat(2, 3.4mm); gap:0.3mm; margin:0 1mm;}
+  #printSheet .hj-rk i{font-style:normal; font-size:5pt; line-height:1.25; border:0.8px solid #000; text-align:center; background:#fff;}
+  #printSheet .hj-rk i.on{background:#000; color:#fff;}
+  #printSheet .hj-parts{display:inline-flex; gap:0.8mm;} #printSheet .hj-parts span{display:flex; flex-direction:column; align-items:center; min-width:5.5mm;}
+  #printSheet .hj-parts b{border-bottom:1px solid var(--b); width:100%; text-align:center; font-size:8pt;} #printSheet .hj-parts em{font-size:6pt; font-style:normal; color:var(--b); font-weight:700;}
+  #printSheet .hj-g-def{display:grid; grid-template-columns:1fr 62mm; gap:3mm;}
+  #printSheet .hj-def{display:grid; grid-template-columns:30mm 36mm 1fr; gap:2mm;}
+  #printSheet .hj-ac-l{font-size:7.2pt; font-weight:700;}
+  #printSheet .hj-ac-v{width:14mm; height:14mm; margin:1mm auto; border:2px solid var(--b); border-radius:50% 50% 40% 40%; display:flex; align-items:center; justify-content:center; font-size:14pt; font-weight:700;}
+  #printSheet .hj-mini{font-size:6pt; color:#444;}
+  #printSheet .hj-sh{width:9mm; height:10mm; border:1.5px solid var(--b); border-radius:1mm 1mm 50% 50%; display:flex; align-items:center; justify-content:center; font-weight:700;}
+  #printSheet .hj-shs{display:flex; gap:1mm;} #printSheet .hj-shs .hj-f{min-height:7mm; flex:1;}
+  #printSheet .hj-arm{display:flex; gap:1.5mm;} #printSheet .hj-arm > div{display:flex; flex-direction:column; align-items:center;} #printSheet .hj-arm em{font-size:5.5pt; font-style:normal;}
+  #printSheet .hj-saves{display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.5mm; align-content:start;}
+  #printSheet .hj-save-n{font-family:'Cinzel',serif; font-weight:700; font-size:9pt; text-align:center;}
+  #printSheet .hj-save-b, #printSheet .hj-per, #printSheet .hj-cd{display:flex; align-items:center; justify-content:center;}
+  #printSheet .hj-shield{min-width:11mm; height:8mm; padding:0 1mm; border:2px solid var(--b); border-radius:2mm 2mm 4mm 4mm; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11pt; box-sizing:border-box;}
+  #printSheet .hj-wide{grid-column:1 / -1;}
+  #printSheet .hj-hp{display:flex; gap:2mm;}
+  #printSheet .hj-heart{width:14mm; height:12mm; border:2px solid var(--b); border-radius:50% 50% 50% 50% / 40% 40% 60% 60%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12pt;}
+  #printSheet .hj-box{border:1px solid var(--b); min-height:6mm; border-radius:2px; box-sizing:border-box; padding:1px 3px;}
+  #printSheet .hj-box.tall{min-height:13mm;} #printSheet .hj-box.sm{min-height:5mm; width:9mm;} #printSheet .hj-box.in, #printSheet .hj-book.in{display:inline-block; vertical-align:middle; text-align:center;}
+  #printSheet .hj-box.lang{min-height:17mm;} #printSheet .hj-box.notes{min-height:40mm;} #printSheet .hj-box.cdv{width:18mm; min-height:9mm; font-size:13pt; font-weight:700; text-align:center; border-width:2px;}
+  #printSheet .hj-dots{letter-spacing:1px;} #printSheet .hj-sq{display:inline-block; width:5mm; height:3.5mm; border:1px solid #000; vertical-align:middle;}
+  #printSheet .hj-g-main{display:grid; grid-template-columns:78mm 1fr; gap:3mm;}
+  #printSheet .hj-sk{display:grid; grid-template-columns:25mm 9mm auto 1fr; align-items:center; padding:1.35mm 0; border-bottom:1px dotted #ccc;}
+  #printSheet .hj-sk-n{font-weight:700; font-size:9pt; text-align:right; padding-right:1.5mm;}
+  #printSheet .hj-sk-v{border:1.8px solid var(--g); border-radius:2px 2px 4px 4px; height:6mm; display:flex; align-items:center; justify-content:center; font-weight:700;}
+  #printSheet .hj-g2{display:grid; grid-template-columns:1fr 1fr 1fr; gap:2mm;}
+  #printSheet .hj-g2b{display:grid; grid-template-columns:1fr 1fr; gap:3mm;}
+  #printSheet .hj-arrow{border:1.8px solid var(--b); clip-path:polygon(0 25%,70% 25%,70% 0,100% 50%,70% 100%,70% 75%,0 75%); background:#f4ebe6; height:12mm; display:flex; align-items:center; padding-left:3mm; font-weight:700; font-size:11pt;}
+  #printSheet .hj-strike{margin-bottom:1.5mm;} #printSheet .hj-st-top{display:flex; gap:1.5mm; align-items:center;}
+  #printSheet .hj-st-atk{min-width:13mm; height:9mm; border:2px solid var(--b); border-radius:40%; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:700; font-size:10.5pt;}
+  #printSheet .hj-st-atk small{font-size:6pt; font-weight:400;}
+  #printSheet .hj-rem{display:flex; gap:3mm; font-size:7pt;}
+  #printSheet .hj-foot{position:absolute; bottom:0; left:0; right:0; display:flex; justify-content:space-between; font-size:7pt; color:#777; font-weight:700;}
+  #printSheet .hj-g-p2{display:grid; grid-template-columns:1fr 64mm; gap:3mm;}
+  #printSheet .hj-g2h{display:grid; grid-template-columns:1fr 1fr; gap:3mm;}
+  #printSheet .hj-levels{border:1px solid var(--b);}
+  #printSheet .hj-lv{display:grid; grid-template-columns:8mm 1fr 1fr; min-height:12.4mm; border-bottom:1px solid var(--b); font-size:8pt;}
+  #printSheet .hj-lv:first-child{min-height:24mm;}
+  #printSheet .hj-lv.future{color:#888;}
+  #printSheet .hj-lvn{background:var(--b); color:#fff; font-weight:700; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:9pt;}
+  #printSheet .hj-lvn small{font-size:6pt;}
+  #printSheet .hj-lvl, #printSheet .hj-lvr{padding:1mm 2mm; position:relative;} #printSheet .hj-lvr{border-left:1px solid #ccc;}
+  #printSheet .hj-lv em{font-style:normal; font-size:6.8pt; color:#555; display:inline-block; min-width:0; margin-right:1mm;}
+  #printSheet .hj-boosts{display:block; font-size:7pt; color:#555;}
+  #printSheet .hj-inv{border:1px solid var(--b); min-height:35mm; margin-bottom:2mm; padding:1mm;} #printSheet .hj-inv.tall{min-height:60mm;}
+  #printSheet .hj-invh{display:flex; justify-content:space-between; font-size:7pt; color:#555; border-bottom:1px solid #ddd;}
+  #printSheet .hj-invi{font-size:8.5pt; border-bottom:1px dotted #ccc; padding:0.6mm 0;}
+  #printSheet .hj-coins{display:flex; gap:2mm; margin:1mm 0 2mm;} #printSheet .hj-coins div{width:12mm; height:12mm; border:2px solid #999; border-radius:50%; font-size:7pt; font-weight:700; display:flex; align-items:flex-start; justify-content:center;}
+  #printSheet .hj-g-p3{display:grid; grid-template-columns:62mm 1fr; gap:3mm;}
+  #printSheet .hj-sketch{border:2px solid #000; height:92mm;}
+  #printSheet .hj-act{border:1px solid var(--b); min-height:24mm; margin-bottom:1.5mm; padding:1mm; font-size:7pt; color:#555; display:grid; grid-template-columns:2fr 1fr 2fr; align-content:start; gap:1mm;}
+  #printSheet .hj-act div{grid-column:1 / -1; margin-top:3mm;}
+  #printSheet .hj-g-p4{display:grid; grid-template-columns:62mm 1fr; gap:3mm;}
+  #printSheet .hj-trad{display:grid; grid-template-columns:1fr 1fr; gap:1mm; font-size:8pt; font-weight:600;}
+  #printSheet .hj-tbl{width:100%; border-collapse:collapse; border:1px solid var(--b); font-size:8pt;}
+  #printSheet .hj-tbl th{font-weight:400; font-size:6.8pt; color:#555; text-align:left; border-bottom:1px solid #ccc; padding:0.5mm 1mm;}
+  #printSheet .hj-tbl td{padding:0.5mm 1mm; border-bottom:1px dotted #ddd;} #printSheet .hj-tbl .num{text-align:center; width:8mm;}
+  #printSheet .hj-tbl tr.fill td{height:25mm;} #printSheet .hj-g-p4 > div:last-child .hj-tbl tr.fill:not(.sm) td{height:170mm;} #printSheet .hj-tbl tr.fill.sm td{height:14mm;}
+  #printSheet .hj-slots{display:flex; gap:1.4mm; align-items:flex-end;}
+  #printSheet .hj-slot{display:flex; flex-direction:column; align-items:center; gap:0.5mm;} #printSheet .hj-slot b{font-size:10pt;}
+  #printSheet .hj-slot-l{display:flex; flex-direction:column; gap:1.3mm; font-size:7pt; text-align:right;} #printSheet .hj-slot-l b{font-size:8.5pt;}
+  #printSheet .hj-book{width:9mm; height:6mm; border:1.5px solid #000; border-radius:1mm 1mm 0 0; display:flex; align-items:center; justify-content:center; font-weight:700;}
+  #printSheet .hj-row2 .hj-ac-l{white-space:nowrap;} #printSheet .hj-circ{display:inline-block; width:4mm; height:4mm; border:1.5px solid #000; border-radius:50%; margin-left:1mm; vertical-align:middle;}
+  #printSheet .hj-circ.on{background:#000;}
 
   /* ---- Ficha ---- */
   .ficha-grants{margin:8px 0 12px; padding:8px 12px; border-radius:6px; background:var(--accent-soft); border-left:3px solid var(--accent);}
@@ -2073,127 +2138,203 @@
     var a = fAsc(), h = fHerencia(), t = fTrasfondo(), c = fClase();
     var E = escapeHtml;
     var at = computeAttrs(), m = at.mod;
+    var lvl = ficha.nivel;
     var clave = c ? (claveOptions(c).length === 1 ? claveOptions(c)[0] : ficha.mejoras.clase) : null;
     var claveMod = clave ? m[clave] : 0;
     var ai = armorInfo(m), sh = curShield(), eq = eqState();
     var res = curArmor() ? (eq.resistencia || 0) : 0;
-    function st(stat, modKey, base, item){
-      var r = rankAt(c, stat);
-      var v = (base || 0) + profBonus(r) + (modKey ? m[modKey] : claveMod) + (item || 0);
-      return {v: v, r: r};
+    var S = function(n){ return (n >= 0 ? '+' : '') + n; };
+    function prof(r){ return profBonus(r); }
+    function ranks(r){
+      return '<span class="hj-rk">' + ['En','Ex','M','L'].map(function(l, i){ return '<i class="' + (r > i ? 'on' : '') + '">' + l + '</i>'; }).join('') + '</span>';
     }
-    function box(label, value, sub){
-      return '<div class="ps-box"><div class="ps-box-v">' + value + '</div><div class="ps-box-l">' + E(label) + '</div>' + (sub ? '<div class="ps-box-s">' + sub + '</div>' : '') + '</div>';
+    function parts(list){ // [[valor, etiqueta], ...]
+      return '<span class="hj-parts">' + list.map(function(p){ return '<span><b>' + (p[0] === '' ? '&nbsp;' : S(p[0])) + '</b><em>' + p[1] + '</em></span>'; }).join('') + '</span>';
     }
-    function sec(title, inner){ return '<section class="ps-sec"><h3>' + E(title) + '</h3>' + inner + '</section>'; }
-    var html = '';
+    function title(txt){ return '<div class="hj-t"><span>' + E(txt) + '</span></div>'; }
+    function field(label, value, cls){ return '<div class="hj-f ' + (cls || '') + '"><div class="hj-fv">' + (value || '&nbsp;') + '</div><div class="hj-fl">' + E(label) + '</div></div>'; }
 
-    // Cabecera
-    var sub = [c ? c.nombre + ' ' + ficha.nivel : 'Sin clase',
-               a ? a.nombre : '', h ? h.nombre : '', t ? 'Trasfondo: ' + t.nombre : ''].filter(Boolean).join(' · ');
+    // ================= PÁGINA 1 =================
+    var p1 = '';
     var subcl = [];
     if(c) c.subclases.forEach(function(sb){
       var ch = (ficha.subclases[sb.tipo] || []).map(function(en){ var o = findBy(sb.opciones,'en',en); return o ? o.nombre : en; });
       if(ch.length) subcl.push(sb.etiqueta + ': ' + ch.join(', '));
     });
-    var ci0 = casterInfo();
-    if(ci0 && ci0.trad && c.tradicion.length > 1) subcl.push('Tradición: ' + ci0.trad);
-    html += '<header class="ps-head"><div><div class="ps-name">' + E(activeCharacter) + '</div><div class="ps-sub">' + E(sub) + '</div>' +
-            (subcl.length ? '<div class="ps-sub2">' + E(subcl.join(' · ')) + '</div>' : '') + '</div>' +
-            '<div class="ps-meta">' + (a ? E(a.tamano.join('/')) + ' · ' + (a.velocidad + ai.speedPen) + ' pies' + (a.vision ? ' · ' + E(a.vision) : '') : '') +
-            (a ? '<br>' + E(a.idiomas.join(', ')) : '') + (a ? '<br><i>' + E(a.rasgos.join(', ')) + '</i>' : '') + '</div></header>';
-
-    // Atributos
-    html += '<div class="ps-attrs">' + ATRS.map(function(x){
-      return '<div class="ps-attr"><div class="ps-attr-c">' + x.c + '</div><div class="ps-attr-v">' + fmtMod(m[x.k]) + (at.partial[x.k] ? '<sup>½</sup>' : '') + '</div></div>';
+    p1 += '<div class="hj-head">' +
+      '<div class="hj-brand"><div class="hj-brand-a">Grimorio</div><div class="hj-brand-b">Hoja de personaje · PF2</div></div>' +
+      '<div class="hj-hcol">' + title('Nombre del personaje') + '<div class="hj-box"><span class="hj-big">' + E(activeCharacter) + '</span></div>' + field('Nombre del jugador', '') + '</div>' +
+      '<div class="hj-hlvl">' + title('Nivel') + '<div class="hj-star">' + lvl + '</div><div class="hj-px">PX <span></span></div></div>' +
+      '<div class="hj-hhero">' + title('Puntos de héroe') + '<div class="hj-hex"><i></i><i></i><i></i></div></div>' +
+      '</div>';
+    p1 += '<div class="hj-g3">' +
+      '<div>' + title('Ascendencia') + '<div class="hj-row2">' + field('Ascendencia y herencias', E([a ? a.nombre : '', h ? h.nombre : ''].filter(Boolean).join(' · ')), 'grow') + field('Tamaño', a ? E(a.tamano.join('/')) : '') + '</div></div>' +
+      '<div>' + title('Bagaje') + field('Notas del bagaje', t ? E(t.nombre) + (t.habilidades.length ? ' <small>(' + E(t.habilidades.join(', ')) + ')</small>' : '') : '') + '</div>' +
+      '<div>' + title('Clase') + field('Notas de clase', c ? E(c.nombre) + (subcl.length ? ' <small>' + E(subcl.join(' · ')) + '</small>' : '') : '') + '</div>' +
+      '</div>';
+    p1 += title('Puntuaciones de atributo') + '<div class="hj-attrs">' + ATRS.map(function(x){
+      return '<div class="hj-attr"><div class="hj-attr-box">' + S(m[x.k]) + '</div><div><div class="hj-attr-n">' + x.n + '</div><div class="hj-attr-p"><i class="' + (at.partial[x.k] ? 'on' : '') + '"></i>Mejora parcial</div></div></div>';
     }).join('') + '</div>';
 
-    // Defensas
-    if(a && c){
-      var hp = (a.pg || 0) + (c.pg + m.con) * ficha.nivel;
-      var per = st('per','sab'), fo = st('fort','con',0,res), re = st('ref','des',0,res), vo = st('vol','sab',0,res), cd = st('cd',null,10);
-      html += '<div class="ps-row">' +
-        box('PG máx.', hp, '&nbsp;actuales: ______') +
-        box('CA', ai.ac + (sh ? ' <small>(' + (ai.ac + sh.ca) + ')</small>' : ''), E(ai.armor ? ai.armor.nombre : 'Sin armadura') + (sh ? ' · ' + E(sh.nombre) : '')) +
-        box('Percepción', fmtMod(per.v), PROF_LABEL[per.r]) +
-        box('Fortaleza', fmtMod(fo.v), PROF_LABEL[fo.r]) +
-        box('Reflejos', fmtMod(re.v), PROF_LABEL[re.r]) +
-        box('Voluntad', fmtMod(vo.v), PROF_LABEL[vo.r]) +
-        box('CD de clase', cd.v, PROF_LABEL[cd.r]) +
-        box('Velocidad', (a.velocidad + ai.speedPen), 'pies') + '</div>';
+    // Defensas + PG
+    var defR = ai.rank, dexUsed = Math.min(m.des, ai.dexCap);
+    var acObj = (ai.armor ? ai.armor.ca : 0) + ai.pot;
+    function save(nm, stat, key){
+      var r = rankAt(c, stat); var v = prof(r) + m[key] + res;
+      return '<div class="hj-save"><div class="hj-save-n">' + nm + '</div><div class="hj-save-b"><div class="hj-shield">' + S(v) + '</div>' + ranks(r) + '</div>' +
+             parts([[m[key], ATR_NAME[key].slice(0,3)], [prof(r), 'Comp'], [res, 'Obj']]) + '</div>';
     }
+    var hp = (a && c) ? (a.pg || 0) + (c.pg + m.con) * lvl : '';
+    p1 += '<div class="hj-g-def">' +
+      '<div>' + title('Defensas') + '<div class="hj-def">' +
+        '<div class="hj-ac"><div class="hj-ac-l">Clase de armadura</div><div class="hj-ac-v">' + (c ? ai.ac : '') + '</div>' +
+          parts([[10,'Base'],[dexUsed,'Des*'],[c ? prof(defR) : '', 'Comp'],[acObj,'Obj']]) + '<div class="hj-mini">*Usa el límite a la Des por armadura si es menor</div></div>' +
+        '<div class="hj-shieldbox"><div class="hj-ac-l">Escudo</div><div class="hj-sh">' + (sh ? '+' + sh.ca : '+') + '</div>' +
+          '<div class="hj-shs">' + field('Dureza', sh ? sh.dureza : '') + field('Máx PG', sh ? sh.pg : '') + field('PG', '') + '</div>' +
+          '<div class="hj-ac-l" style="margin-top:3px">Competencia en armadura</div><div class="hj-arm">' +
+          ['sinArmadura','ligera','intermedia','pesada'].map(function(k){ return '<div><em>' + {sinArmadura:'Sin armadura',ligera:'Ligera',intermedia:'Intermedia',pesada:'Pesada'}[k] + '</em>' + ranks(c ? eqRank(k) : 0) + '</div>'; }).join('') + '</div></div>' +
+        '<div class="hj-saves">' + (c ? save('Fortaleza','fort','con') + save('Reflejos','ref','des') + save('Voluntad','vol','sab') : '') +
+          '<div class="hj-f hj-wide"><div class="hj-fv">' + (ai.armor ? E(ai.armor.nombre) + (ai.pot ? ' +' + ai.pot : '') + (res ? ', resistente +' + res : '') : '') + '</div><div class="hj-fl">Notas de defensa</div></div></div>' +
+      '</div></div>' +
+      '<div>' + title('Puntos de golpe') + '<div class="hj-hp"><div><div class="hj-ac-l">Máximos</div><div class="hj-heart">' + hp + '</div></div>' +
+        '<div class="grow"><div class="hj-ac-l">PG actuales</div><div class="hj-box tall"></div></div>' +
+        '<div><div class="hj-ac-l">PG temporales</div><div class="hj-box"></div><div class="hj-ac-l">Morib. <span class="hj-dots">○○○○</span></div><div class="hj-ac-l">Herido <span class="hj-sq"></span></div></div></div>' +
+        field('Resistencias e inmunidades', '') + field('Estados', '') + '</div>' +
+      '</div>';
 
-    // Columnas
-    var left = '', right = '';
+    // Habilidades (izquierda) + resto (derecha)
+    var sk = (c && t) ? computeSkills() : {ranks:{}};
+    var lores = Object.keys(sk.ranks).filter(isLore).sort();
+    while(lores.length < 2) lores.push('');
+    var skillNames = ['Acrobacias','Arcanos','Artesanía','Atletismo','Diplomacia','Engaño','Interpretación','Intimidación','Latrocinio','Medicina','Naturaleza','Ocultismo','Religión'].concat(lores.map(function(l){ return l || 'Saber ___'; })).concat(['Sigilo','Sociedad','Supervivencia']);
+    var skills = skillNames.map(function(n){
+      var isL = /^Saber/.test(n), real = isL && n !== 'Saber ___' ? n : (isL ? null : n);
+      var attr = isL ? 'int' : skillAttr(n);
+      var r = real ? (sk.ranks[real] || 0) : 0;
+      var pen = real ? skillArmorPenalty(real, ai) : 0;
+      var hasArm = attr === 'fue' || attr === 'des';
+      var v = real ? m[attr] + prof(r) + pen : '';
+      return '<div class="hj-sk"><div class="hj-sk-n">' + E(isL ? (real ? real : 'Saber ______') : n) + '</div><div class="hj-sk-v">' + (v === '' ? '' : S(v)) + '</div>' + ranks(r) +
+             parts([[real ? m[attr] : '', ATR_NAME[attr].slice(0,3)], [real ? prof(r) : '', 'Comp'], [real ? 0 : '', 'Obj']].concat(hasArm ? [[real ? pen : '', 'Arm']] : [])) + '</div>';
+    }).join('');
 
-    // Habilidades
-    if(c && t){
-      var sk = computeSkills();
-      var names = SKILLS.map(function(s){ return s.n; }).concat(Object.keys(sk.ranks).filter(isLore).sort());
-      left += sec('Habilidades', '<table class="ps-tbl">' + names.map(function(n){
-        var r = sk.ranks[n] || 0;
-        var v = m[skillAttr(n)] + profBonus(r) + skillArmorPenalty(n, ai);
-        return '<tr' + (r ? ' class="tr"' : '') + '><td>' + E(n) + ' <small>' + ATR_NAME[skillAttr(n)].slice(0,3).toUpperCase() + '</small></td><td>' + ['—','E','X','M','L'][r] + '</td><td class="num">' + fmtMod(v) + '</td></tr>';
-      }).join('') + '</table><div class="ps-note">E entrenado · X experto · M maestro · L legendario</div>');
-    }
-
-    // Ataques
-    var armas = (eq.armas || []).map(function(slot){
+    var per = rankAt(c, 'per');
+    var strikes = (eq.armas || []).map(function(slot){
       var w = findBy(eqData().armas, 'id', slot.id); if(!w) return '';
       var k = weaponCalc(w, slot, m);
-      var nm = w.nombre + (slot.potencia ? ' +' + slot.potencia : '') + (slot.golpe ? ' ' + ['','de golpe','de golpe mayor','de golpe superior'][slot.golpe] : '');
-      return '<tr><td>' + E(nm) + '<br><small>' + E([w.tipo === 'distancia' ? 'Distancia' + (w.alcance ? ' ' + w.alcance + ' p' : '') : 'C. a c.'].concat(w.rasgos).join(', ')) + '</small></td>' +
-             '<td class="num">' + fmtMod(k.atk) + '<br><small>' + fmtMod(k.atk - k.map[0]) + '/' + fmtMod(k.atk - k.map[1]) + '</small></td><td>' + E(k.dmg) + ' ' + E(w.tipoDano || '') + '</td></tr>';
+      var ranged = w.tipo === 'distancia', tr = w.rasgosEn || [];
+      var attrV = ranged ? m.des : (tr.indexOf('finesse') !== -1 ? Math.max(m.fue, m.des) : m.fue);
+      return '<div class="hj-strike"><div class="hj-st-top"><div class="hj-f grow"><div class="hj-fv">' + E(w.nombre + (slot.potencia ? ' +' + slot.potencia : '') + (slot.golpe ? ' ' + ['','de golpe','de golpe mayor','de golpe superior'][slot.golpe] : '')) +
+        '</div><div class="hj-fl">' + (ranged ? 'Arma a distancia' : 'Arma cuerpo a cuerpo') + '</div></div>' +
+        '<div class="hj-st-atk">' + S(k.atk) + '<small>' + S(k.atk - k.map[0]) + ' / ' + S(k.atk - k.map[1]) + '</small></div>' +
+        parts([[attrV, ranged ? 'Des' : 'Fue'], [prof(k.rank), 'Comp'], [slot.potencia || 0, 'Obj']]) +
+        '<div class="hj-f"><div class="hj-fv">' + E(k.dmg) + ' ' + E(w.tipoDano || '') + '</div><div class="hj-fl">Daño</div></div></div>' +
+        '<div class="hj-f hj-wide"><div class="hj-fv small">' + E([ranged && w.alcance ? 'Incremento ' + w.alcance + ' pies' : ''].concat(w.rasgos).filter(Boolean).join(', ')) + '</div><div class="hj-fl">Rasgos y notas</div></div></div>';
     }).join('');
-    if(armas) right += sec('Ataques', '<table class="ps-tbl"><tr><th>Arma</th><th>Ataque</th><th>Daño</th></tr>' + armas + '</table>');
+    if(!strikes) strikes = '<div class="hj-strike empty"><div class="hj-f hj-wide"><div class="hj-fv"></div><div class="hj-fl">Arma</div></div></div>';
+    var cd = c ? {r: rankAt(c,'cd')} : {r:0};
+    var right = '<div class="hj-g2">' +
+        '<div>' + title('Idiomas') + '<div class="hj-box lang">' + (a ? E(a.idiomas.join(', ')) : '') + '</div></div>' +
+        '<div>' + title('Percepción') + '<div class="hj-per"><div class="hj-shield">' + (c ? S(m.sab + prof(per)) : '') + '</div>' + ranks(per) + parts([[m.sab,'Sab'],[c ? prof(per) : '','Comp'],[0,'Obj']]) + '</div>' +
+          field('Sentidos y notas', a && a.vision ? E(a.vision) : '') + '</div>' +
+        '<div>' + title('Velocidad') + '<div class="hj-arrow">' + (a ? (a.velocidad + ai.speedPen) : '') + ' <small>pies</small></div>' + field('Movimiento especial', '') + '</div>' +
+      '</div>' +
+      title('Golpes') + strikes +
+      '<div class="hj-g2b"><div><div class="hj-ac-l">Competencias en armas</div><div class="hj-arm">' +
+        ['sinArmas','simple','marcial','avanzada'].map(function(k){ return '<div><em>' + {sinArmas:'Sin armas',simple:'Simple',marcial:'Marcial',avanzada:'Avanzada'}[k] + '</em>' + ranks(c ? eqRank(k) : 0) + '</div>'; }).join('') +
+        '</div></div>' + field('Especializaciones críticas', '', 'grow') + '</div>' +
+      '<div class="hj-g2b"><div>' + title('CD de clase') + '<div class="hj-cd"><div class="hj-box cdv">' + (c ? 10 + claveMod + prof(cd.r) : '') + '</div>' + parts([[10,'Base'],[claveMod,'Clave'],[c ? prof(cd.r) : '','Comp']]) + '</div></div>' +
+        '<div>' + title('Recordatorios') + '<div class="hj-rem"><div><b>Competencia</b><br>No entrenado +0<br>Entrenado 2 + nivel<br>Experto 4 + nivel<br>Maestro 6 + nivel<br>Legendario 8 + nivel</div>' +
+        '<div><b>Iconos de acción</b><br>◆ Una acción<br>◆◆ Dos acciones<br>◆◆◆ Tres acciones<br>◇ Acción gratuita<br>⤾ Reacción</div></div></div></div>';
+    p1 += '<div class="hj-g-main"><div>' + title('Habilidades') + '<div class="hj-skills">' + skills + '</div></div><div>' + right + '</div></div>';
+    p1 += '<div class="hj-foot"><span>Página uno — Estadísticas</span><span>' + E(activeCharacter) + ' · ' + new Date().toLocaleDateString('es-ES') + '</span></div>';
 
-    // Dotes y rasgos
-    if(c){
-      var TIPOS = {ascendencia:'Ascendencia', clase:'Clase', habilidad:'Habilidad', general:'General'};
-      var rows = featSlots().map(function(s){
-        var d = ficha.dotes[slotKey(s)];
-        return '<tr><td class="num">' + s.nivel + '</td><td>' + TIPOS[s.tipo] + '</td><td>' + (d ? E(d.nombre) : '<span class="ps-empty">—</span>') + '</td></tr>';
-      }).join('');
-      var granted = activeGrants().filter(function(x){ return x.g.tipo === 'dote'; }).map(function(x){
-        return '<tr><td class="num">' + (x.g.nivel || 1) + '</td><td>Concedida</td><td>' + E(x.item ? x.item.name : x.g.nombre) + ' <small>(' + E(x.origen) + ')</small></td></tr>';
-      }).join('');
-      right += sec('Dotes', '<table class="ps-tbl">' + granted + rows + '</table>');
-      var rasgos = c.rasgos.filter(function(r){ return r.nivel <= ficha.nivel; }).map(function(r){ return E(r.nombre) + ' <small>(' + r.nivel + ')</small>'; });
-      if(h) rasgos.unshift('Herencia: ' + E(h.nombre));
-      right += sec('Rasgos de clase', '<div class="ps-list">' + rasgos.join(' · ') + '</div>');
+    // ================= PÁGINA 2 =================
+    var slots = c ? featSlots() : [];
+    var grants = activeGrants();
+    function slotFeat(tipo, L){ var d = ficha.dotes[tipo + '-' + L]; return d ? E(d.nombre) : ''; }
+    var rowsL = '';
+    for(var L = 1; L <= 20; L++){
+      var left = [], rightC = [];
+      if(L === 1){
+        left.push('<em>Aptitudes de ascendencia y de herencia</em> ' + E([h ? h.nombre : '', a && a.vision ? a.vision : ''].filter(Boolean).join(' · ')));
+        left.push('<em>Dote de ascendencia</em> ' + slotFeat('ascendencia', 1));
+        var bgF = grants.filter(function(x){ return x.bg; }).map(function(x){ return x.item ? x.item.name : x.g.nombre; });
+        left.push('<em>Dote de habilidad de bagaje</em> ' + E(bgF.join(', ')));
+        var cf = grants.filter(function(x){ return !x.bg && (x.g.nivel || 1) === 1; }).map(function(x){ return (x.item ? x.item.name : x.g.nombre); });
+        rightC.push('<em>Dotes y rasgos de clase</em> ' + E((c ? c.rasgos.filter(function(r){ return r.nivel === 1; }).map(function(r){ return r.nombre; }) : []).concat(cf).concat(slotFeat('clase',1) ? [ficha.dotes['clase-1'].nombre] : []).join(', ')));
+      } else {
+        if(c && c.huecos.ascendencia.indexOf(L) !== -1) left.push('<em>Dote de ascendencia</em> ' + slotFeat('ascendencia', L));
+        if(c && c.huecos.general.indexOf(L) !== -1) left.push('<em>Dote general</em> ' + slotFeat('general', L));
+        if(c && c.huecos.habilidad.indexOf(L) !== -1) left.push('<em>Dote de habilidad</em> ' + slotFeat('habilidad', L));
+        if(!c){ left.push('<em>' + (L % 2 === 0 ? 'Dote de habilidad' : ([5,9,13,17].indexOf(L) !== -1 ? 'Dote de ascendencia' : 'Dote general')) + '</em>'); }
+        if(c && c.huecos.clase.indexOf(L) !== -1) rightC.push('<em>Dote de clase</em> ' + slotFeat('clase', L));
+        var rs = c ? c.rasgos.filter(function(r){ return r.nivel === L; }).map(function(r){ return r.nombre; }) : [];
+        if(rs.length || !c) rightC.push('<em>Rasgo de clase</em> ' + E(rs.join(', ')));
+        var inc = (ficha.habilidades && ficha.habilidades.incrementos || {})[L];
+        if(inc && L <= lvl) rightC.push('<em>Incremento de habilidad</em> ' + E(inc));
+      }
+      var boosts = MEJORA_NIVELES.indexOf(L) !== -1 ? '<span class="hj-boosts">Mejoras ' + (L <= lvl ? E((ficha.mejoras['n' + L] || []).map(function(k){ return ATR_NAME[k].slice(0,3); }).join(' ')) : '') + '</span>' : '';
+      rowsL += '<div class="hj-lv' + (L <= lvl ? '' : ' future') + '"><div class="hj-lvn">' + (L === 1 ? '<small>Nivel</small>' : '') + L + '</div><div class="hj-lvl">' + left.join('<br>') + boosts + '</div><div class="hj-lvr">' + rightC.join('<br>') + '</div></div>';
     }
+    var inv = [];
+    (eq.armas || []).forEach(function(slot){ var w = findBy(eqData().armas,'id',slot.id); if(w) inv.push(w.nombre + (slot.potencia ? ' +' + slot.potencia : '')); });
+    if(sh) inv.push(sh.nombre);
+    var worn = ai.armor ? [ai.armor.nombre + (ai.pot ? ' +' + ai.pot : '') + (res ? ' (resistente +' + res + ')' : '')] : [];
+    var p2 = '<div class="hj-g-p2"><div>' + '<div class="hj-g2h">' + title('Dotes de ascendencia y generales') + title('Aptitudes de clase') + '</div><div class="hj-levels">' + rowsL + '</div></div>' +
+      '<div>' + title('Inventario') + '<div class="hj-inv"><div class="hj-invh">Objetos sostenidos<span>Imp</span></div>' + inv.map(function(x){ return '<div class="hj-invi">' + E(x) + '</div>'; }).join('') + '</div>' +
+      '<div class="hj-inv"><div class="hj-invh">Consumibles<span>Imp</span></div></div>' +
+      '<div class="hj-inv tall"><div class="hj-invh">Objetos puestos<span>Investidos · Imp</span></div>' + worn.map(function(x){ return '<div class="hj-invi">' + E(x) + '</div>'; }).join('') + '</div>' +
+      title('Impedimenta') + '<div class="hj-rem"><div><b>Objetos ligeros</b> 10 = Imp. 1<br><b>Impedido</b> 5 + Fue (' + (5 + m.fue) + ')<br><b>Máximo</b> 10 + Fue (' + (10 + m.fue) + ')<br><b>Máx. investidos</b> 10</div></div>' +
+      title('Riqueza') + '<div class="hj-coins"><div>PC</div><div>PP</div><div>PO</div><div>PPT</div></div><div class="hj-inv"><div class="hj-invh">Gemas y objetos de arte<span>Precio · Imp</span></div></div>' +
+      '</div></div>';
+    p2 += '<div class="hj-foot"><span>Página dos — Aptitudes e inventario</span><span></span></div>';
 
-    // Conjuros
-    var ci = casterInfo();
-    if(ci && ci.trad){
-      var mk = markedSpellsByRank(ci);
-      var sa = st('conj', castAttr(c));
-      var sp = '<div class="ps-note">' + E(ci.trad) + ' · ' + (ci.espontaneo ? 'espontáneo' : (ci.tipo === 'mixto' ? 'preparado y espontáneo' : 'preparado')) +
-               ' · ataque ' + fmtMod(sa.v) + ' · CD ' + (10 + sa.v) + '</div><table class="ps-tbl"><tr><th>Rango</th><th>Esp.</th><th>' + (ci.espontaneo ? 'Repertorio' : 'Preparados') + '</th></tr>' +
-               ci.ranks.map(function(r){
-                 return '<tr><td>' + (r === 0 ? 'Trucos' : r + '.º') + '</td><td class="num">' + E(String(ci.slots[r])) + '</td><td>' +
-                        ((mk.by[r] || []).map(function(s){ return E(s.name); }).join(', ') || '<span class="ps-empty">—</span>') + '</td></tr>';
-               }).join('') + '</table>';
-      left += sec('Conjuros', sp);
+    // ================= PÁGINA 3 =================
+    var p3 = '<div class="hj-g-p3"><div>' + title('Boceto del personaje') + '<div class="hj-sketch"></div></div><div>' + title('Origen y apariencia') +
+      '<div class="hj-row2">' + ['Grupo étnico','Nacionalidad','Lugar de nacimiento','Edad','Género','Altura','Peso'].map(function(l){ return field(l,''); }).join('') + '</div>' + field('Apariencia','','tall') +
+      title('Personalidad') + '<div class="hj-row2">' + field('Actitud','','grow') + field('Dios o filosofía','','grow') + '</div><div class="hj-row2">' + field('Edictos','','grow tall2') + field('Anatemas','','grow tall2') + '</div>' +
+      field('Le gusta','') + field('No le gusta','') + field('Frases comunes','') + '</div></div>' +
+      title('Notas de la campaña') + '<div class="hj-g2b"><div class="hj-box notes"></div><div>' + field('Aliados','','tall') + field('Enemigos','','tall') + field('Organizaciones','','tall') + '</div></div>' +
+      '<div class="hj-g2b"><div>' + title('Acciones y actividades') + [1,2,3,4].map(function(){ return '<div class="hj-act"><span>Nombre</span><span>Acciones</span><span>Rasgos</span><div>Efectos</div></div>'; }).join('') + '</div>' +
+      '<div>' + title('Acciones y reacciones gratuitas') + [1,2,3,4].map(function(){ return '<div class="hj-act"><span>Nombre</span><span>◇ ⤾</span><span>Rasgos</span><div>Desencadenante</div><div>Efectos</div></div>'; }).join('') + '</div></div>';
+    p3 += '<div class="hj-foot"><span>Página tres — Notas y acciones</span><span></span></div>';
+
+    // ================= PÁGINA 4 =================
+    var ci = casterInfo(), fi = focusInfo(), fc = focusCasting(fi);
+    var p4 = '';
+    var hasSpells = (ci && ci.trad) || fi.spells.length || fi.cantrips.length;
+    if(hasSpells){
+      var mk = ci && ci.trad ? markedSpellsByRank(ci) : {by:{}};
+      var sa = ci && ci.trad ? {r: rankAt(c,'conj')} : null;
+      var sattr = c ? (castAttr(c) ? m[castAttr(c)] : claveMod) : 0;
+      var trads = ['Arcana','Ocultista','Primigenia','Divina'];
+      var slotsRow = '';
+      for(var r = 1; r <= 10; r++){ slotsRow += '<div class="hj-slot"><div class="hj-book">' + (ci && ci.slots[r] ? E(String(ci.slots[r])) : '') + '</div><b>' + r + '</b><div class="hj-box sm"></div></div>'; }
+      function spellRows(list){ return list.map(function(s){ return '<tr><td>' + E(s.name) + '</td><td>' + E(s.cast || '') + '</td><td class="num">' + (s.rank || '') + '</td><td class="num">☐</td></tr>'; }).join(''); }
+      var ranked = [];
+      for(var rr = 1; rr <= 10; rr++) ranked = ranked.concat(mk.by[rr] || []);
+      var half = Math.ceil(ranked.length / 2);
+      p4 += '<div class="hj-g-p4"><div>' +
+        title('Tradiciones mágicas') + '<div class="hj-trad">' + trads.map(function(tr){ return '<span><i class="' + (ci && ci.trad === tr ? 'on' : '') + '"></i>' + tr + '</span>'; }).join('') +
+          '<span><i class="' + (ci && ci.trad && !ci.espontaneo ? 'on' : '') + '"></i>Lanzador preparado</span><span><i class="' + (ci && ci.espontaneo ? 'on' : '') + '"></i>Lanzador espontáneo</span></div>' +
+        title('Estadísticas de conjuro') + '<div class="hj-g2b"><div><div class="hj-ac-l">Ataque de conjuro</div><div class="hj-per"><div class="hj-shield">' + (sa ? S(sattr + prof(sa.r)) : '') + '</div>' + ranks(sa ? sa.r : 0) + parts([[sa ? sattr : '','Clave'],[sa ? prof(sa.r) : '','Comp']]) + '</div></div>' +
+          '<div><div class="hj-ac-l">CD de conjuros</div><div class="hj-per"><div class="hj-shield">' + (sa ? 10 + sattr + prof(sa.r) : '') + '</div>' + parts([[10,'Base'],[sa ? sattr : '','Clave'],[sa ? prof(sa.r) : '','Comp']]) + '</div></div></div>' +
+        title('Trucos') + '<div class="hj-row2"><div class="hj-ac-l">Trucos por día <span class="hj-book in">' + (ci && ci.slots[0] ? E(String(ci.slots[0])) : '') + '</span></div><div class="hj-ac-l">Nivel del truco <span class="hj-box sm in">' + Math.max(1, Math.ceil(lvl/2)) + '</span></div></div>' +
+        '<table class="hj-tbl"><tr><th>Nombre</th><th>Acciones</th><th>Prep</th></tr>' + (mk.by[0] || []).map(function(s){ return '<tr><td>' + E(s.name) + '</td><td>' + E(s.cast || '') + '</td><td class="num">☐</td></tr>'; }).join('') + '<tr class="fill"><td colspan="3"></td></tr></table>' +
+        title('Conjuros de foco') + '<div class="hj-row2"><div class="hj-ac-l">Puntos de foco ' + [0,1,2].map(function(i){ return '<i class="hj-circ ' + (i < fi.puntos ? 'on' : '') + '"></i>'; }).join('') + '</div><div class="hj-ac-l">Rango de conjuro de foco <span class="hj-box sm in">' + fi.rango + '</span></div></div>' +
+        '<div class="hj-mini"><b>Reserva de foco</b> igual al número de conjuros de foco que tienes (máximo 3). <b>Reenfocar</b> 10 minutos para recuperar 1 Punto de Foco.' + (fc ? ' Ataque ' + S(fc.atk) + ' · CD ' + fc.cd : '') + '</div>' +
+        '<table class="hj-tbl"><tr><th>Nombre</th><th>Acciones</th></tr>' + fi.spells.concat(fi.cantrips).map(function(s){ return '<tr><td>' + E(s.name) + (isFocusCantrip(s) ? ' <small>(truco)</small>' : '') + '</td><td>' + E(s.cast || '') + '</td></tr>'; }).join('') + '<tr class="fill"><td colspan="2"></td></tr></table>' +
+        title('Conjuros innatos') + '<table class="hj-tbl"><tr><th>Nombre</th><th>Acciones</th><th>Frec</th></tr><tr class="fill sm"><td colspan="3"></td></tr></table>' +
+        '</div><div>' +
+        title('Espacios de conjuro') + '<div class="hj-slots"><div class="hj-slot-l"><span>Conjuros por día</span><b>Nivel de conjuro</b><span>Conjuros restantes</span></div>' + slotsRow + '</div>' +
+        title('Conjuros') + '<div class="hj-g2b"><table class="hj-tbl"><tr><th>Nombre</th><th>Acciones</th><th>Rango</th><th>Prep</th></tr>' + spellRows(ranked.slice(0, half)) + '<tr class="fill"><td colspan="4"></td></tr></table>' +
+        '<table class="hj-tbl"><tr><th>Nombre</th><th>Acciones</th><th>Rango</th><th>Prep</th></tr>' + spellRows(ranked.slice(half)) + '<tr class="fill"><td colspan="4"></td></tr></table></div>' +
+        title('Rituales') + '<div class="hj-g2b"><table class="hj-tbl"><tr><th>Nombre</th><th>Rango</th><th>Coste</th></tr><tr class="fill sm"><td colspan="3"></td></tr></table><table class="hj-tbl"><tr><th>Nombre</th><th>Rango</th><th>Coste</th></tr><tr class="fill sm"><td colspan="3"></td></tr></table></div>' +
+        '</div></div>';
+      p4 += '<div class="hj-foot"><span>Página cuatro — Conjuros</span><span></span></div>';
     }
-    var fi = focusInfo();
-    if(fi.spells.length || fi.cantrips.length){
-      var fc = focusCasting(fi);
-      left += sec('Conjuros de foco', '<div class="ps-note">Puntos de foco: ' + fi.puntos + ' ' + Array(fi.puntos + 1).join('☐') + ' · rango ' + fi.rango + '.º' +
-        (fc ? ' · ataque ' + fmtMod(fc.atk) + ' · CD ' + fc.cd : '') + '</div><div class="ps-list">' +
-        fi.spells.concat(fi.cantrips).map(function(s){ return E(s.name) + (isFocusCantrip(s) ? ' <small>(truco)</small>' : ''); }).join(' · ') + '</div>');
-    }
-
-    // Equipo
-    var eqTxt = [];
-    if(ai.armor) eqTxt.push(E(ai.armor.nombre) + (ai.pot ? ' +' + ai.pot : '') + (res ? ' (resistente ' + res + ')' : '') + ' — CA +' + ai.armor.ca + (ai.armor.destrezaMax !== null ? ', Des máx. +' + ai.armor.destrezaMax : '') + (ai.checkPen ? ', penalizador ' + ai.checkPen : ''));
-    if(sh) eqTxt.push(E(sh.nombre) + ' — CA +' + sh.ca + ', dureza ' + sh.dureza + ', PG ' + sh.pg);
-    right += sec('Equipo', '<div class="ps-list">' + (eqTxt.join('<br>') || '—') + '</div><div class="ps-lines"></div>');
-    right += sec('Notas', '<div class="ps-lines tall"></div>');
-
-    html += '<div class="ps-cols"><div>' + left + '</div><div>' + right + '</div></div>';
-    html += '<footer class="ps-foot">Grimorio · Pathfinder 2.ª ed. · ' + new Date().toLocaleDateString('es-ES') + '</footer>';
-    return html;
+    return '<div class="hj-page">' + p1 + '</div><div class="hj-page">' + p2 + '</div><div class="hj-page">' + p3 + '</div>' + (p4 ? '<div class="hj-page">' + p4 + '</div>' : '');
   }
   function printFicha(){
     var el = document.getElementById('printSheet');
