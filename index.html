@@ -278,6 +278,47 @@
     position:relative; z-index:1;
   }
 
+  /* ---- Hoja imprimible ---- */
+  #printSheet{display:none;}
+  .ficha-print-btn{margin:-8px 0 14px;}
+  @media print{
+    @page{size:A4; margin:10mm;}
+    body > *:not(#printSheet){display:none !important;}
+    body{background:#fff !important; color:#000 !important;}
+    body::before, body::after{display:none !important;}
+    #printSheet{display:block; font-family:'EB Garamond', Georgia, serif; font-size:10pt; color:#000; line-height:1.25;}
+  }
+  #printSheet .ps-head{display:flex; justify-content:space-between; gap:12px; border-bottom:2px solid #000; padding-bottom:4px; margin-bottom:6px;}
+  #printSheet .ps-name{font-family:'Cinzel', serif; font-size:20pt; font-weight:700;}
+  #printSheet .ps-sub{font-size:11pt; font-weight:600;}
+  #printSheet .ps-sub2{font-size:9.5pt; font-style:italic;}
+  #printSheet .ps-meta{text-align:right; font-size:9pt;}
+  #printSheet .ps-attrs{display:grid; grid-template-columns:repeat(6,1fr); gap:4px; margin:4px 0;}
+  #printSheet .ps-attr{border:1.5px solid #000; border-radius:6px; text-align:center; padding:2px 0;}
+  #printSheet .ps-attr-c{font-family:'Cinzel',serif; font-size:8pt;}
+  #printSheet .ps-attr-v{font-size:15pt; font-weight:700;}
+  #printSheet .ps-row{display:grid; grid-template-columns:repeat(8,1fr); gap:4px; margin:4px 0 6px;}
+  #printSheet .ps-box{border:1px solid #000; border-radius:5px; text-align:center; padding:2px 2px 3px;}
+  #printSheet .ps-box-v{font-size:13pt; font-weight:700;}
+  #printSheet .ps-box-v small{font-size:8pt; font-weight:400;}
+  #printSheet .ps-box-l{font-size:8pt; font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
+  #printSheet .ps-box-s{font-size:7.5pt; font-style:italic;}
+  #printSheet .ps-cols{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  #printSheet .ps-sec{break-inside:avoid; margin-bottom:6px;}
+  #printSheet .ps-sec h3{font-family:'Cinzel',serif; font-size:10pt; margin:0 0 2px; border-bottom:1px solid #000;}
+  #printSheet .ps-tbl{width:100%; border-collapse:collapse; font-size:9pt;}
+  #printSheet .ps-tbl td, #printSheet .ps-tbl th{padding:1px 3px; border-bottom:1px solid #ccc; vertical-align:top; text-align:left;}
+  #printSheet .ps-tbl th{font-size:8pt; text-transform:uppercase;}
+  #printSheet .ps-tbl tr.tr td{font-weight:600;}
+  #printSheet .ps-tbl .num{text-align:right; white-space:nowrap;}
+  #printSheet .ps-tbl small, #printSheet .ps-list small{font-size:7.5pt; color:#333;}
+  #printSheet .ps-note{font-size:8pt; font-style:italic; margin:1px 0 2px;}
+  #printSheet .ps-list{font-size:9pt;}
+  #printSheet .ps-empty{color:#999;}
+  #printSheet .ps-lines{height:40px; background:repeating-linear-gradient(#fff 0 17px, #bbb 17px 18px);}
+  #printSheet .ps-lines.tall{height:110px;}
+  #printSheet .ps-foot{margin-top:6px; font-size:7.5pt; text-align:right; color:#555;}
+
   /* ---- Ficha ---- */
   .ficha-grants{margin:8px 0 12px; padding:8px 12px; border-radius:6px; background:var(--accent-soft); border-left:3px solid var(--accent);}
   .ficha-grant{display:flex; flex-wrap:wrap; gap:2px 12px; align-items:baseline; padding:3px 0;}
@@ -1150,6 +1191,11 @@
     var banner = el('div','school-banner');
     banner.innerHTML = '<div class="icon">F</div><div><h2>Ficha de ' + escapeHtml(activeCharacter) + '</h2><p>Ascendencia, trasfondo, clase, atributos y progresión por nivel.</p></div>';
     main.appendChild(banner);
+    if(BASE && gameMode !== 'sf'){
+      var pbtn = el('button','char-btn ficha-add ficha-print-btn','🖨 Imprimir ficha / guardar como PDF');
+      pbtn.addEventListener('click', printFicha);
+      main.appendChild(pbtn);
+    }
 
     if(!BASE){
       main.appendChild(el('div','empty-msg','No se ha podido cargar <b>base.json</b>. Ponlo en la misma carpeta que index.html.'));
@@ -2020,6 +2066,141 @@
       }
     });
     parent.appendChild(box);
+  }
+
+  // ---- Hoja imprimible ----
+  function buildPrintSheet(){
+    var a = fAsc(), h = fHerencia(), t = fTrasfondo(), c = fClase();
+    var E = escapeHtml;
+    var at = computeAttrs(), m = at.mod;
+    var clave = c ? (claveOptions(c).length === 1 ? claveOptions(c)[0] : ficha.mejoras.clase) : null;
+    var claveMod = clave ? m[clave] : 0;
+    var ai = armorInfo(m), sh = curShield(), eq = eqState();
+    var res = curArmor() ? (eq.resistencia || 0) : 0;
+    function st(stat, modKey, base, item){
+      var r = rankAt(c, stat);
+      var v = (base || 0) + profBonus(r) + (modKey ? m[modKey] : claveMod) + (item || 0);
+      return {v: v, r: r};
+    }
+    function box(label, value, sub){
+      return '<div class="ps-box"><div class="ps-box-v">' + value + '</div><div class="ps-box-l">' + E(label) + '</div>' + (sub ? '<div class="ps-box-s">' + sub + '</div>' : '') + '</div>';
+    }
+    function sec(title, inner){ return '<section class="ps-sec"><h3>' + E(title) + '</h3>' + inner + '</section>'; }
+    var html = '';
+
+    // Cabecera
+    var sub = [c ? c.nombre + ' ' + ficha.nivel : 'Sin clase',
+               a ? a.nombre : '', h ? h.nombre : '', t ? 'Trasfondo: ' + t.nombre : ''].filter(Boolean).join(' · ');
+    var subcl = [];
+    if(c) c.subclases.forEach(function(sb){
+      var ch = (ficha.subclases[sb.tipo] || []).map(function(en){ var o = findBy(sb.opciones,'en',en); return o ? o.nombre : en; });
+      if(ch.length) subcl.push(sb.etiqueta + ': ' + ch.join(', '));
+    });
+    var ci0 = casterInfo();
+    if(ci0 && ci0.trad && c.tradicion.length > 1) subcl.push('Tradición: ' + ci0.trad);
+    html += '<header class="ps-head"><div><div class="ps-name">' + E(activeCharacter) + '</div><div class="ps-sub">' + E(sub) + '</div>' +
+            (subcl.length ? '<div class="ps-sub2">' + E(subcl.join(' · ')) + '</div>' : '') + '</div>' +
+            '<div class="ps-meta">' + (a ? E(a.tamano.join('/')) + ' · ' + (a.velocidad + ai.speedPen) + ' pies' + (a.vision ? ' · ' + E(a.vision) : '') : '') +
+            (a ? '<br>' + E(a.idiomas.join(', ')) : '') + (a ? '<br><i>' + E(a.rasgos.join(', ')) + '</i>' : '') + '</div></header>';
+
+    // Atributos
+    html += '<div class="ps-attrs">' + ATRS.map(function(x){
+      return '<div class="ps-attr"><div class="ps-attr-c">' + x.c + '</div><div class="ps-attr-v">' + fmtMod(m[x.k]) + (at.partial[x.k] ? '<sup>½</sup>' : '') + '</div></div>';
+    }).join('') + '</div>';
+
+    // Defensas
+    if(a && c){
+      var hp = (a.pg || 0) + (c.pg + m.con) * ficha.nivel;
+      var per = st('per','sab'), fo = st('fort','con',0,res), re = st('ref','des',0,res), vo = st('vol','sab',0,res), cd = st('cd',null,10);
+      html += '<div class="ps-row">' +
+        box('PG máx.', hp, '&nbsp;actuales: ______') +
+        box('CA', ai.ac + (sh ? ' <small>(' + (ai.ac + sh.ca) + ')</small>' : ''), E(ai.armor ? ai.armor.nombre : 'Sin armadura') + (sh ? ' · ' + E(sh.nombre) : '')) +
+        box('Percepción', fmtMod(per.v), PROF_LABEL[per.r]) +
+        box('Fortaleza', fmtMod(fo.v), PROF_LABEL[fo.r]) +
+        box('Reflejos', fmtMod(re.v), PROF_LABEL[re.r]) +
+        box('Voluntad', fmtMod(vo.v), PROF_LABEL[vo.r]) +
+        box('CD de clase', cd.v, PROF_LABEL[cd.r]) +
+        box('Velocidad', (a.velocidad + ai.speedPen), 'pies') + '</div>';
+    }
+
+    // Columnas
+    var left = '', right = '';
+
+    // Habilidades
+    if(c && t){
+      var sk = computeSkills();
+      var names = SKILLS.map(function(s){ return s.n; }).concat(Object.keys(sk.ranks).filter(isLore).sort());
+      left += sec('Habilidades', '<table class="ps-tbl">' + names.map(function(n){
+        var r = sk.ranks[n] || 0;
+        var v = m[skillAttr(n)] + profBonus(r) + skillArmorPenalty(n, ai);
+        return '<tr' + (r ? ' class="tr"' : '') + '><td>' + E(n) + ' <small>' + ATR_NAME[skillAttr(n)].slice(0,3).toUpperCase() + '</small></td><td>' + ['—','E','X','M','L'][r] + '</td><td class="num">' + fmtMod(v) + '</td></tr>';
+      }).join('') + '</table><div class="ps-note">E entrenado · X experto · M maestro · L legendario</div>');
+    }
+
+    // Ataques
+    var armas = (eq.armas || []).map(function(slot){
+      var w = findBy(eqData().armas, 'id', slot.id); if(!w) return '';
+      var k = weaponCalc(w, slot, m);
+      var nm = w.nombre + (slot.potencia ? ' +' + slot.potencia : '') + (slot.golpe ? ' ' + ['','de golpe','de golpe mayor','de golpe superior'][slot.golpe] : '');
+      return '<tr><td>' + E(nm) + '<br><small>' + E([w.tipo === 'distancia' ? 'Distancia' + (w.alcance ? ' ' + w.alcance + ' p' : '') : 'C. a c.'].concat(w.rasgos).join(', ')) + '</small></td>' +
+             '<td class="num">' + fmtMod(k.atk) + '<br><small>' + fmtMod(k.atk - k.map[0]) + '/' + fmtMod(k.atk - k.map[1]) + '</small></td><td>' + E(k.dmg) + ' ' + E(w.tipoDano || '') + '</td></tr>';
+    }).join('');
+    if(armas) right += sec('Ataques', '<table class="ps-tbl"><tr><th>Arma</th><th>Ataque</th><th>Daño</th></tr>' + armas + '</table>');
+
+    // Dotes y rasgos
+    if(c){
+      var TIPOS = {ascendencia:'Ascendencia', clase:'Clase', habilidad:'Habilidad', general:'General'};
+      var rows = featSlots().map(function(s){
+        var d = ficha.dotes[slotKey(s)];
+        return '<tr><td class="num">' + s.nivel + '</td><td>' + TIPOS[s.tipo] + '</td><td>' + (d ? E(d.nombre) : '<span class="ps-empty">—</span>') + '</td></tr>';
+      }).join('');
+      var granted = activeGrants().filter(function(x){ return x.g.tipo === 'dote'; }).map(function(x){
+        return '<tr><td class="num">' + (x.g.nivel || 1) + '</td><td>Concedida</td><td>' + E(x.item ? x.item.name : x.g.nombre) + ' <small>(' + E(x.origen) + ')</small></td></tr>';
+      }).join('');
+      right += sec('Dotes', '<table class="ps-tbl">' + granted + rows + '</table>');
+      var rasgos = c.rasgos.filter(function(r){ return r.nivel <= ficha.nivel; }).map(function(r){ return E(r.nombre) + ' <small>(' + r.nivel + ')</small>'; });
+      if(h) rasgos.unshift('Herencia: ' + E(h.nombre));
+      right += sec('Rasgos de clase', '<div class="ps-list">' + rasgos.join(' · ') + '</div>');
+    }
+
+    // Conjuros
+    var ci = casterInfo();
+    if(ci && ci.trad){
+      var mk = markedSpellsByRank(ci);
+      var sa = st('conj', castAttr(c));
+      var sp = '<div class="ps-note">' + E(ci.trad) + ' · ' + (ci.espontaneo ? 'espontáneo' : (ci.tipo === 'mixto' ? 'preparado y espontáneo' : 'preparado')) +
+               ' · ataque ' + fmtMod(sa.v) + ' · CD ' + (10 + sa.v) + '</div><table class="ps-tbl"><tr><th>Rango</th><th>Esp.</th><th>' + (ci.espontaneo ? 'Repertorio' : 'Preparados') + '</th></tr>' +
+               ci.ranks.map(function(r){
+                 return '<tr><td>' + (r === 0 ? 'Trucos' : r + '.º') + '</td><td class="num">' + E(String(ci.slots[r])) + '</td><td>' +
+                        ((mk.by[r] || []).map(function(s){ return E(s.name); }).join(', ') || '<span class="ps-empty">—</span>') + '</td></tr>';
+               }).join('') + '</table>';
+      left += sec('Conjuros', sp);
+    }
+    var fi = focusInfo();
+    if(fi.spells.length || fi.cantrips.length){
+      var fc = focusCasting(fi);
+      left += sec('Conjuros de foco', '<div class="ps-note">Puntos de foco: ' + fi.puntos + ' ' + Array(fi.puntos + 1).join('☐') + ' · rango ' + fi.rango + '.º' +
+        (fc ? ' · ataque ' + fmtMod(fc.atk) + ' · CD ' + fc.cd : '') + '</div><div class="ps-list">' +
+        fi.spells.concat(fi.cantrips).map(function(s){ return E(s.name) + (isFocusCantrip(s) ? ' <small>(truco)</small>' : ''); }).join(' · ') + '</div>');
+    }
+
+    // Equipo
+    var eqTxt = [];
+    if(ai.armor) eqTxt.push(E(ai.armor.nombre) + (ai.pot ? ' +' + ai.pot : '') + (res ? ' (resistente ' + res + ')' : '') + ' — CA +' + ai.armor.ca + (ai.armor.destrezaMax !== null ? ', Des máx. +' + ai.armor.destrezaMax : '') + (ai.checkPen ? ', penalizador ' + ai.checkPen : ''));
+    if(sh) eqTxt.push(E(sh.nombre) + ' — CA +' + sh.ca + ', dureza ' + sh.dureza + ', PG ' + sh.pg);
+    right += sec('Equipo', '<div class="ps-list">' + (eqTxt.join('<br>') || '—') + '</div><div class="ps-lines"></div>');
+    right += sec('Notas', '<div class="ps-lines tall"></div>');
+
+    html += '<div class="ps-cols"><div>' + left + '</div><div>' + right + '</div></div>';
+    html += '<footer class="ps-foot">Grimorio · Pathfinder 2.ª ed. · ' + new Date().toLocaleDateString('es-ES') + '</footer>';
+    return html;
+  }
+  function printFicha(){
+    var el = document.getElementById('printSheet');
+    el.innerHTML = buildPrintSheet();
+    var prevTitle = document.title;
+    document.title = 'Ficha - ' + activeCharacter;
+    setTimeout(function(){ window.print(); document.title = prevTitle; }, 50);
   }
 
   // ---- Exportar / importar la ficha ----
@@ -3114,5 +3295,6 @@
     });
   }
 </script>
+<div id="printSheet"></div>
 </body>
 </html>
