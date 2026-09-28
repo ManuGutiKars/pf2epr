@@ -1940,7 +1940,7 @@
       var item = null;
       if(x.g.tipo === 'dote') item = matchFeat(x.g);
       else if(x.g.tipo === 'foco') item = matchSpell(FOCUS_SPELLS, x.g);
-      else item = matchSpell(SPELLS.filter(function(sp){ return !ci || !ci.key || sp.school === ci.key; }), x.g);
+      else item = matchSpell(SPELLS.filter(function(sp){ return !ci || !ci.key || sp.school === ci.key; }), x.g) || matchSpell(SPELLS, x.g);
       return {g: x.g, origen: x.origen, item: item};
     });
   }
