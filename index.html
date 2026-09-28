@@ -1195,9 +1195,23 @@
     // ---- Trasfondo ----
     var sT = section('Trasfondo');
     sT.appendChild(makeSelect(BASE.trasfondos.map(function(x){ return {value:x.en, label:x.nombre + rarLabel(x.rareza)}; }), ficha.trasfondo, 'Elige trasfondo…', function(v){
-      change(function(){ ficha.trasfondo = v; ficha.mejoras.trasfondo = []; });
+      change(function(){ ficha.trasfondo = v; ficha.mejoras.trasfondo = []; ficha.dotesTrasfondo = {}; });
     }));
     if(t) sT.appendChild(detailBox(textToHtml(t.texto)));
+    if(t) (t.dotesConcede || []).forEach(function(slot, i){
+      var row = el('div','ficha-slot');
+      row.appendChild(el('span','ficha-slot-l','Dote del trasfondo'));
+      if(slot.length === 1){
+        var ft = matchFeat(slot[0], true);
+        row.appendChild(el('span','ficha-grant-n', escapeHtml(ft ? ft.name : slot[0].nombre) + (ft ? ' <span class="ficha-grant-o">· marcada ✓</span>' : ' <span class="ficha-grant-o">· no está en feats.json</span>')));
+      } else {
+        var cur = (ficha.dotesTrasfondo || {})[i] || null;
+        row.appendChild(makeSelect(slot.map(function(o){ return {value:o.en, label:o.nombre}; }), cur, 'Elige una: ' + slot.map(function(o){ return o.nombre; }).join(' o '), function(v){
+          change(function(){ ficha.dotesTrasfondo = ficha.dotesTrasfondo || {}; if(v) ficha.dotesTrasfondo[i] = v; else delete ficha.dotesTrasfondo[i]; });
+        }));
+      }
+      sT.appendChild(row);
+    });
     main.appendChild(sT);
 
     // ---- Clase ----
@@ -1240,7 +1254,7 @@
         });
       });
     }
-    if(c) renderGrantsBox(sC);
+    renderGrantsBox(sC);
     main.appendChild(sC);
 
     // ---- Atributos ----
@@ -1914,18 +1928,29 @@
     }
     return bestS >= 0.75 ? best : null;
   }
-  function matchFeat(g){
-    var es = normName(g.nombre);
+  function matchFeat(g, preferSkill){
+    var es = normName(g.buscar || g.nombre);
     var c = FEATS.filter(function(f){ return f.game !== 'sf' && normName(f.name) === es; });
     var cl = fClase();
+    if(preferSkill) return c.filter(function(f){ return f.group === 'skill'; })[0] || c[0] || null;
     return c.filter(function(f){ return cl && f.category === cl.categoriaDotes; })[0] || c.filter(function(f){ return f.group === 'skill'; })[0] || c[0] || null;
   }
   // Lista de lo concedido, con su origen y si se ha encontrado en los datos
+  function bgFeatGrants(){
+    var t = fTrasfondo(), out = [];
+    if(!t) return out;
+    var sel = ficha.dotesTrasfondo || {};
+    (t.dotesConcede || []).forEach(function(slot, i){
+      var o = slot.length === 1 ? slot[0] : findBy(slot, 'en', sel[i]);
+      if(o) out.push({g: {tipo:'dote', en:o.en, nombre:o.nombre, buscar:o.buscar, nivel:1}, origen: 'Trasfondo ' + t.nombre, bg: true});
+    });
+    return out;
+  }
   function activeGrants(){
-    var c = fClase(); if(!c) return [];
-    var out = [];
-    (c.concede || []).forEach(function(g){ out.push({g: g, origen: c.nombre}); });
-    (c.subclases || []).forEach(function(sub){
+    var c = fClase();
+    var out = bgFeatGrants();
+    if(c) (c.concede || []).forEach(function(g){ out.push({g: g, origen: c.nombre}); });
+    if(c) (c.subclases || []).forEach(function(sub){
       (ficha.subclases[sub.tipo] || []).forEach(function(en){
         var o = findBy(sub.opciones, 'en', en);
         if(o) (o.concede || []).forEach(function(g){ out.push({g: g, origen: sub.etiqueta + ' ' + o.nombre}); });
@@ -1938,7 +1963,7 @@
       return true;
     }).map(function(x){
       var item = null;
-      if(x.g.tipo === 'dote') item = matchFeat(x.g);
+      if(x.g.tipo === 'dote') item = matchFeat(x.g, x.bg);
       else if(x.g.tipo === 'foco') item = matchSpell(FOCUS_SPELLS, x.g);
       else item = matchSpell(SPELLS.filter(function(sp){ return !ci || !ci.key || sp.school === ci.key; }), x.g) || matchSpell(SPELLS, x.g);
       return {g: x.g, origen: x.origen, item: item};
