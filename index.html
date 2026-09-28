@@ -279,6 +279,35 @@
   }
 
   /* ---- Ficha ---- */
+  .ficha-slots-table{display:flex; flex-direction:column; gap:3px; margin:8px 0;}
+  .ficha-slots-row{display:grid; grid-template-columns:110px 70px 1fr; gap:10px; align-items:baseline; padding:5px 8px; border-radius:5px; border-bottom:1px solid rgba(51,38,25,0.08);}
+  .ficha-slots-row.full{background:var(--accent-soft);}
+  .ficha-slots-row.over{background:rgba(160,60,60,0.12);}
+  .ficha-slots-r{font-family:'Cinzel',serif; font-size:13px; color:var(--accent);}
+  .ficha-slots-n{font-weight:600;}
+  .ficha-slots-l{font-size:14.5px;}
+  .ficha-caster-bar{font-size:14.5px; padding:8px 12px; margin:-6px 0 16px; border-radius:6px; background:var(--accent-soft); border-left:3px solid var(--accent);}
+  .ficha-rank-slots{font-style:normal !important; color:var(--accent) !important; font-weight:600;}
+  .ficha-rank-slots.out{color:var(--ink-soft) !important; font-weight:400; font-style:italic !important;}
+  @media (max-width:640px){ .ficha-slots-row{grid-template-columns:80px 60px 1fr;} }
+  .ficha-weapon{border-left:3px solid var(--accent); padding:2px 0 6px 10px; margin:6px 0 10px;}
+  .ficha-weapon .ficha-slot .ficha-select{min-width:150px;}
+  .ficha-weapon .ficha-slot .ficha-select:first-child{flex:2; min-width:220px;}
+  .ficha-weapon-calc{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 16px;}
+  .ficha-weapon-atk{font-size:20px; font-weight:600;}
+  .ficha-weapon-atk small{font-size:13px; font-weight:400; color:var(--ink-soft);}
+  .ficha-weapon-dmg{font-size:17px; font-weight:600; color:var(--accent);}
+  .ficha-weapon-calc .ficha-note{flex-basis:100%; margin:0;}
+  .ficha-section .ficha-add{color:var(--accent); border-color:var(--accent); margin:4px 0 8px;}
+  .ficha-section .ficha-del{color:#8a3a3a; border-color:#8a3a3a;}
+  .ficha-stat-v small{font-size:15px; color:var(--ink-soft);}
+  .ficha-skills{display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:4px 16px; margin-top:12px;}
+  .ficha-skill{display:flex; align-items:baseline; gap:8px; padding:4px 8px; border-radius:5px; border-bottom:1px solid rgba(51,38,25,0.08); color:var(--ink-soft);}
+  .ficha-skill.trained{background:var(--accent-soft); color:var(--ink);}
+  .ficha-skill-n{flex:1; font-weight:600;}
+  .ficha-skill-n small{font-family:'Cinzel',serif; font-weight:400; font-size:11px; color:var(--ink-soft);}
+  .ficha-skill-r{font-size:13px; font-style:italic;}
+  .ficha-skill-v{min-width:38px; text-align:right; font-weight:600; font-size:17px;}
   .ficha-section{max-width:860px;}
   .ficha-select{
     font-family:'EB Garamond',serif; font-size:16px; color:var(--ink);
@@ -922,7 +951,7 @@
   function emptyFicha(){
     return {nivel:1, ascendencia:null, herencia:null, trasfondo:null, clase:null, subclases:{},
             mejoras:{ancAlternativa:false, ancLibres:[], trasfondo:[], clase:null, n1:[], n5:[], n10:[], n15:[], n20:[]},
-            dotes:{}};
+            dotes:{}, habilidades:{}, equipo:{}};
   }
   function loadFicha(){
     var f = loadJSON(charStorageKeyFicha(activeCharacter), null);
@@ -1249,6 +1278,10 @@
     sM.insertBefore(grid, sM.children[1]);
     main.appendChild(sM);
 
+    renderSkillsSection(main);
+    renderEquipoSection(main);
+    renderConjurosSection(main);
+
     // ---- Resumen ----
     if(a && c){
       var m = at.mod;
@@ -1257,20 +1290,23 @@
       var claveMod = clave ? m[clave] : 0;
       function stat(label, stat, modKey, base){
         var r = rankAt(c, stat), v = (base || 0) + profBonus(r) + (modKey ? m[modKey] : claveMod);
+        if(['fort','ref','vol'].indexOf(stat) !== -1 && curArmor()) v += (eqState().resistencia || 0);
         return '<div class="ficha-stat"><span class="ficha-stat-v">' + (base ? v : fmtMod(v)) + '</span><span class="ficha-stat-l">' + label + '</span><span class="ficha-stat-r">' + PROF_LABEL[r] + '</span></div>';
       }
-      var sR = section('Resumen', '(sin equipo)');
+      var sR = section('Resumen');
       var stats = el('div','ficha-stats');
       stats.innerHTML =
         '<div class="ficha-stat"><span class="ficha-stat-v">' + hp + '</span><span class="ficha-stat-l">Puntos de Golpe</span><span class="ficha-stat-r">' + a.pg + ' + (' + c.pg + ' ' + fmtMod(m.con) + ') × ' + ficha.nivel + '</span></div>' +
-        stat('CA (sin armadura)', 'def', 'des', 10) +
+        (function(){ var ai = armorInfo(m), sh = curShield();
+          return '<div class="ficha-stat"><span class="ficha-stat-v">' + ai.ac + (sh ? ' <small>(' + (ai.ac + sh.ca) + ' con escudo)</small>' : '') + '</span><span class="ficha-stat-l">CA</span><span class="ficha-stat-r">' +
+            (ai.armor ? escapeHtml(ai.armor.nombre) : 'Sin armadura') + ' · ' + PROF_LABEL[ai.rank] + '</span></div>'; })() +
         stat('Percepción', 'per', 'sab') +
         stat('Fortaleza', 'fort', 'con') +
         stat('Reflejos', 'ref', 'des') +
         stat('Voluntad', 'vol', 'sab') +
         stat('CD de clase', 'cd', null, 10) +
         (c.conjuros ? stat('Ataque de conjuros', 'conj', null) + stat('CD de conjuros', 'conj', null, 10) : '') +
-        '<div class="ficha-stat"><span class="ficha-stat-v">' + a.velocidad + '</span><span class="ficha-stat-l">Velocidad (pies)</span><span class="ficha-stat-r">' + escapeHtml(a.tamano.join(', ')) + '</span></div>';
+        '<div class="ficha-stat"><span class="ficha-stat-v">' + (a.velocidad + armorInfo(m).speedPen) + '</span><span class="ficha-stat-l">Velocidad (pies)</span><span class="ficha-stat-r">' + escapeHtml(a.tamano.join(', ')) + '</span></div>';
       sR.appendChild(stats);
       if(!clave) sR.appendChild(el('div','ficha-note','Elige el atributo clave de la clase para calcular la CD de clase.'));
       main.appendChild(sR);
@@ -1331,10 +1367,415 @@
             }
           }
         });
+        if(c.huecos.incHabilidad.indexOf(lv) !== -1) block.appendChild(skillIncreaseRow(lv));
         sP.appendChild(block);
       }
       main.appendChild(sP);
     }
+  }
+
+  // ---- Habilidades ----
+  var SKILLS = [
+    {n:'Acrobacias', a:'des'}, {n:'Arcanos', a:'int'}, {n:'Artesanía', a:'int'}, {n:'Atletismo', a:'fue'},
+    {n:'Diplomacia', a:'car'}, {n:'Engaño', a:'car'}, {n:'Interpretación', a:'car'}, {n:'Intimidación', a:'car'},
+    {n:'Latrocinio', a:'des'}, {n:'Medicina', a:'sab'}, {n:'Naturaleza', a:'sab'}, {n:'Ocultismo', a:'int'},
+    {n:'Religión', a:'sab'}, {n:'Sigilo', a:'des'}, {n:'Sociedad', a:'int'}, {n:'Supervivencia', a:'sab'}
+  ];
+  var SKILL_ATTR = {}; SKILLS.forEach(function(s){ SKILL_ATTR[s.n] = s.a; });
+  function isLore(n){ return /^Saber \(.+\)$/.test(n || ''); }
+  function skillAttr(n){ return SKILL_ATTR[n] || (isLore(n) ? 'int' : null); }
+  function isSkillName(n){ return !!SKILL_ATTR[n] || isLore(n); }
+
+  function habState(){
+    if(!ficha.habilidades) ficha.habilidades = {};
+    var h = ficha.habilidades;
+    ['claseElegidas','subclase','trasfondoManual','libres','intExtra'].forEach(function(k){ if(!Array.isArray(h[k])) h[k] = []; });
+    if(!h.incrementos || typeof h.incrementos !== 'object') h.incrementos = {};
+    return h;
+  }
+  function bgSkillInfo(t){
+    var fixed = [], notes = [];
+    (t ? t.habilidades : []).forEach(function(x){ if(isSkillName(x)) fixed.push(x); else notes.push(x); });
+    var manual = 0;
+    if(t && !t.habilidades.length){ manual = 2; notes.push('Este trasfondo describe sus habilidades en el texto: elígelas a mano.'); }
+    else if(notes.length) manual = notes.length;
+    return {fixed: fixed, notes: notes, manual: manual};
+  }
+  function intModAtLevel1(){
+    var keep = ficha.nivel; ficha.nivel = 1;
+    var m = computeAttrs().mod.int;
+    ficha.nivel = keep;
+    return m;
+  }
+  // Calcula las habilidades entrenadas y los rangos, y cuántas elecciones corresponden a cada fuente
+  function computeSkills(){
+    var c = fClase(), t = fTrasfondo(), h = habState();
+    var ranks = {}, sources = {};
+    function train(n, src){ if(!n) return false; if(ranks[n]) return false; ranks[n] = 1; sources[n] = src; return true; }
+    var overlaps = 0;
+    var bg = bgSkillInfo(t);
+    bg.fixed.forEach(function(n){ train(n, 'Trasfondo'); });
+    h.trasfondoManual.slice(0, bg.manual).forEach(function(n){ train(n, 'Trasfondo'); });
+    if(c){
+      c.hab.fijas.forEach(function(n){ if(!train(n, 'Clase')) overlaps++; });
+      c.hab.elegir.forEach(function(g, i){ var n = h.claseElegidas[i]; if(n && !train(n, 'Clase')) overlaps++; });
+      h.subclase.slice(0, c.hab.subclase).forEach(function(n){ if(!train(n, 'Subclase')) overlaps++; });
+    }
+    var intM = intModAtLevel1();
+    var libresN = c ? Math.max(0, c.hab.extra + intM) + overlaps : 0;
+    h.libres.slice(0, libresN).forEach(function(n){ train(n, 'Libre'); });
+    var intNow = computeAttrs().mod.int;
+    var intExtraN = Math.max(0, intNow - intM);
+    h.intExtra.slice(0, intExtraN).forEach(function(n){ train(n, 'Inteligencia'); });
+    // incrementos por nivel, en orden
+    var incLevels = c ? c.huecos.incHabilidad.filter(function(l){ return l <= ficha.nivel; }) : [];
+    incLevels.forEach(function(l){
+      var n = h.incrementos[l];
+      if(n && ranks[n] && canIncrease(ranks[n], l)) ranks[n]++;
+    });
+    return {ranks: ranks, sources: sources, libresN: libresN, intExtraN: intExtraN, overlaps: overlaps, incLevels: incLevels, bg: bg};
+  }
+  function canIncrease(rank, level){
+    if(rank >= 4) return false;
+    if(rank === 2 && level < 7) return false;   // a maestro desde nivel 7
+    if(rank === 3 && level < 15) return false;  // a legendario desde nivel 15
+    return true;
+  }
+  // Rangos antes de aplicar el incremento del nivel indicado (para ofrecer opciones válidas)
+  function ranksBeforeLevel(level){
+    var c = fClase(), h = habState();
+    var sk = computeSkills();
+    var ranks = {};
+    Object.keys(sk.sources).forEach(function(n){ ranks[n] = 1; });
+    sk.incLevels.forEach(function(l){
+      if(l >= level) return;
+      var n = h.incrementos[l];
+      if(n && ranks[n] && canIncrease(ranks[n], l)) ranks[n]++;
+    });
+    return ranks;
+  }
+  function skillOptions(exclude, allowLoreInput){
+    var opts = SKILLS.filter(function(s){ return exclude.indexOf(s.n) === -1; }).map(function(s){ return {value:s.n, label:s.n}; });
+    if(allowLoreInput) opts.push({value:'__lore__', label:'Saber (otro)…'});
+    return opts;
+  }
+  function loreAwareSelect(current, exclude, placeholder, onSet){
+    var opts = skillOptions(exclude, true);
+    if(current && isLore(current)) opts.splice(opts.length-1, 0, {value: current, label: current});
+    return makeSelect(opts, current, placeholder, function(v){
+      if(v === '__lore__'){
+        var name = prompt('¿Qué Saber? (por ejemplo: guerra, Absalom, ingeniería)');
+        if(!name || !name.trim()){ render(); return; }
+        v = 'Saber (' + name.trim() + ')';
+      }
+      onSet(v);
+    });
+  }
+
+  function renderSkillsSection(main){
+    var c = fClase(), t = fTrasfondo();
+    var sH = section('Habilidades');
+    if(!c || !t){
+      sH.appendChild(el('div','ficha-note','Elige trasfondo y clase para repartir las habilidades.'));
+      main.appendChild(sH); return;
+    }
+    var h = habState();
+    var sk = computeSkills();
+    var trained = Object.keys(sk.ranks);
+
+    function pickRow(label, current, onSet, note){
+      var row = el('div','ficha-slot');
+      row.appendChild(el('span','ficha-slot-l', escapeHtml(label)));
+      var exclude = trained.filter(function(n){ return n !== current; });
+      row.appendChild(loreAwareSelect(current || null, exclude, '— sin elegir —', function(v){ change(function(){ onSet(v); }); }));
+      sH.appendChild(row);
+      if(note) sH.appendChild(el('div','ficha-note', escapeHtml(note)));
+    }
+    function setAt(arr, i, v){ while(arr.length < i) arr.push(null); arr[i] = v; }
+
+    // Automáticas
+    var auto = [];
+    sk.bg.fixed.forEach(function(n){ auto.push(n + ' (trasfondo)'); });
+    c.hab.fijas.forEach(function(n){ auto.push(n + ' (clase)'); });
+    sH.appendChild(el('div','ficha-level-f', auto.length ? 'Entrenado automáticamente en: ' + escapeHtml(auto.join(', ')) : ''));
+    sk.bg.notes.forEach(function(nt){ sH.appendChild(el('div','ficha-note', 'Trasfondo: ' + escapeHtml(nt))); });
+    for(var i = 0; i < sk.bg.manual; i++) (function(i){ pickRow('Del trasfondo', h.trasfondoManual[i], function(v){ setAt(h.trasfondoManual, i, v); }); })(i);
+
+    c.hab.elegir.forEach(function(g, i){
+      var row = el('div','ficha-slot');
+      row.appendChild(el('span','ficha-slot-l','De la clase'));
+      row.appendChild(makeSelect(g.map(function(n){ return {value:n, label:n}; }), h.claseElegidas[i] || null, 'Elige: ' + g.join(' o '), function(v){ change(function(){ setAt(h.claseElegidas, i, v); }); }));
+      sH.appendChild(row);
+    });
+    for(var j = 0; j < c.hab.subclase; j++) (function(j){
+      pickRow('De la subclase', h.subclase[j], function(v){ setAt(h.subclase, j, v); }, j === 0 ? 'Habilidad ' + c.hab.notaSubclase + ' (mira el texto de tu elección de clase).' : '');
+    })(j);
+
+    sH.appendChild(el('div','ficha-boost-label', 'Habilidades adicionales <em>(' + Math.min(h.libres.filter(Boolean).length, sk.libresN) + '/' + sk.libresN + ')</em>'));
+    sH.appendChild(el('div','ficha-note', c.hab.extra + ' de la clase + modificador de Inteligencia a nivel 1' + (sk.overlaps ? ' + ' + sk.overlaps + ' por habilidades repetidas' : '') + '.'));
+    for(var k = 0; k < sk.libresN; k++) (function(k){ pickRow('Adicional ' + (k+1), h.libres[k], function(v){ setAt(h.libres, k, v); }); })(k);
+    if(sk.intExtraN){
+      sH.appendChild(el('div','ficha-note', 'Tu Inteligencia ha subido desde el nivel 1: ganas ' + sk.intExtraN + ' habilidad(es) entrenada(s) más.'));
+      for(var q = 0; q < sk.intExtraN; q++) (function(q){ pickRow('Por Inteligencia ' + (q+1), h.intExtra[q], function(v){ setAt(h.intExtra, q, v); }); })(q);
+    }
+
+    // Tabla
+    var at = computeAttrs().mod;
+    var names = SKILLS.map(function(s){ return s.n; }).concat(trained.filter(isLore).sort());
+    var table = el('div','ficha-skills');
+    names.forEach(function(n){
+      var r = sk.ranks[n] || 0;
+      var v = at[skillAttr(n)] + profBonus(r) + skillArmorPenalty(n, armorInfo(at));
+      var row = el('div','ficha-skill' + (r ? ' trained' : ''));
+      row.innerHTML = '<span class="ficha-skill-n">' + escapeHtml(n) + ' <small>' + ATR_NAME[skillAttr(n)].slice(0,3).toUpperCase() + '</small></span>' +
+                      '<span class="ficha-skill-r">' + PROF_LABEL[r] + '</span><span class="ficha-skill-v">' + fmtMod(v) + '</span>';
+      table.appendChild(row);
+    });
+    sH.appendChild(table);
+    main.appendChild(sH);
+  }
+
+  // Selector de incremento de habilidad dentro del bloque de un nivel
+  function skillIncreaseRow(level){
+    var h = habState();
+    var before = ranksBeforeLevel(level);
+    var cur = h.incrementos[level] || null;
+    var opts = Object.keys(before).filter(function(n){ return canIncrease(before[n], level); }).sort(function(a,b){ return a.localeCompare(b,'es'); })
+      .map(function(n){ return {value:n, label:n + ' (' + PROF_LABEL[before[n]].toLowerCase() + ' → ' + PROF_LABEL[before[n]+1].toLowerCase() + ')'}; });
+    var row = el('div','ficha-slot');
+    row.appendChild(el('span','ficha-slot-l','Incremento de habilidad'));
+    row.appendChild(makeSelect(opts, cur, '— sin elegir —', function(v){ change(function(){ if(v) h.incrementos[level] = v; else delete h.incrementos[level]; }); }));
+    if(cur && !opts.some(function(o){ return o.value === cur; })) row.appendChild(el('span','ficha-note','«' + escapeHtml(cur) + '» ya no es válido aquí.'));
+    return row;
+  }
+
+  // ---- Equipo ----
+  var EQ_CAT_LABEL = {simple:'sencilla', marcial:'marcial', avanzada:'avanzada', sinArmas:'sin armas',
+                      sinArmadura:'sin armadura', ligera:'ligera', intermedia:'intermedia', pesada:'pesada'};
+  var DMG_LABEL = {C:'contundente', P:'perforante', S:'cortante', F:'fuego'};
+  function eqState(){
+    if(!ficha.equipo || typeof ficha.equipo !== 'object') ficha.equipo = {};
+    var e = ficha.equipo;
+    if(e.armadura === undefined) e.armadura = null;
+    if(!e.armaduraPotencia) e.armaduraPotencia = 0;
+    if(!e.resistencia) e.resistencia = 0;
+    if(e.escudo === undefined) e.escudo = null;
+    if(!Array.isArray(e.armas)) e.armas = [];
+    return e;
+  }
+  function eqData(){ return (BASE && BASE.equipo) || {armaduras:[], escudos:[], armas:[]}; }
+  function eqRank(k){
+    var c = fClase(); if(!c || !c.competenciasEquipo) return 0;
+    var r = c.competenciasEquipo.inicial[k] || 0;
+    c.competenciasEquipo.mejoras.forEach(function(m){ if(m.k === k && m.nivel <= ficha.nivel && m.rango > r) r = m.rango; });
+    return r;
+  }
+  function curArmor(){ var e = eqState(); return e.armadura ? findBy(eqData().armaduras, 'id', e.armadura) : null; }
+  function curShield(){ var e = eqState(); return e.escudo ? findBy(eqData().escudos, 'id', e.escudo) : null; }
+  function armorInfo(mod){
+    var e = eqState(), ar = curArmor();
+    var cat = ar ? ar.categoria : 'sinArmadura';
+    var rank = eqRank(cat);
+    var dexCap = (ar && ar.destrezaMax !== null && ar.destrezaMax !== undefined) ? ar.destrezaMax : 99;
+    var dex = Math.min(mod.des, dexCap);
+    var pot = ar ? (e.armaduraPotencia || 0) : 0;
+    var ac = 10 + dex + profBonus(rank) + (ar ? ar.ca : 0) + pot;
+    var meets = !ar || !ar.fuerza || mod.fue >= ar.fuerza;
+    var checkPen = (ar && !meets) ? (ar.penalizador || 0) : 0;
+    var speedPen = ar ? (ar.velocidad || 0) : 0;
+    if(ar && meets && speedPen) speedPen = Math.min(0, speedPen + 5);
+    var flexible = ar && (ar.rasgosEn || []).indexOf('flexible') !== -1;
+    return {ac: ac, rank: rank, cat: cat, armor: ar, dexCap: dexCap, meets: meets, checkPen: checkPen, speedPen: speedPen, flexible: flexible, pot: pot};
+  }
+  function skillArmorPenalty(skillName, info){
+    if(!info.checkPen) return 0;
+    var a = skillAttr(skillName);
+    if(a !== 'fue' && a !== 'des') return 0;
+    if(info.flexible && (skillName === 'Acrobacias' || skillName === 'Atletismo')) return 0;
+    return info.checkPen;
+  }
+  function weaponCalc(w, slot, mod){
+    var c = fClase();
+    var rank = eqRank(w.categoria);
+    var tr = w.rasgosEn || [];
+    var ranged = w.tipo === 'distancia';
+    var attr = ranged ? mod.des : (tr.indexOf('finesse') !== -1 ? Math.max(mod.fue, mod.des) : mod.fue);
+    var pot = slot.potencia || 0;
+    var atk = attr + profBonus(rank) + pot;
+    var agile = tr.indexOf('agile') !== -1;
+    var dice = 1 + (slot.golpe || 0);
+    var die = (w.dado || '1d4').replace(/^\d+/, '');
+    var bonus = 0;
+    if(!ranged || tr.indexOf('thrown') !== -1) bonus += mod.fue;
+    else if(tr.indexOf('propulsive') !== -1) bonus += mod.fue > 0 ? Math.floor(mod.fue/2) : mod.fue;
+    var esp = c && c.especializacion ? c.especializacion : {};
+    if(rank >= 2 && esp.normal && ficha.nivel >= esp.normal){
+      var sb = rank; // experto 2, maestro 3, legendario 4
+      if(esp.mayor && ficha.nivel >= esp.mayor) sb *= 2;
+      bonus += sb;
+    }
+    var dmg = dice + die + (bonus ? (bonus > 0 ? ' + ' + bonus : ' − ' + Math.abs(bonus)) : '');
+    return {atk: atk, map: agile ? [4,8] : [5,10], dmg: dmg, rank: rank};
+  }
+
+  function renderEquipoSection(main){
+    var c = fClase();
+    var sE = section('Equipo');
+    if(!BASE || !BASE.equipo){ sE.appendChild(el('div','ficha-note','Falta la sección de equipo en base.json.')); main.appendChild(sE); return; }
+    var e = eqState(), D = eqData();
+    var mod = computeAttrs().mod;
+    function rar(x){ return rarLabel(x.rareza); }
+    function row(label, control){ var r = el('div','ficha-slot'); r.appendChild(el('span','ficha-slot-l', escapeHtml(label))); r.appendChild(control); sE.appendChild(r); return r; }
+    function numSelect(val, max, fmt, onSet){
+      return makeSelect(Array.from({length:max}, function(_,i){ return {value:String(i+1), label:fmt(i+1)}; }), val ? String(val) : null, fmt(0), function(v){ change(function(){ onSet(parseInt(v || '0', 10)); }); });
+    }
+    // Armadura
+    var groups = ['sinArmadura','ligera','intermedia','pesada'].map(function(cat){
+      return {group: 'Armadura ' + EQ_CAT_LABEL[cat] + ' (' + PROF_LABEL[eqRank(cat)].toLowerCase() + ')',
+              items: D.armaduras.filter(function(a){ return a.categoria === cat; }).map(function(a){ return {value:a.id, label:a.nombre + ' — CA +' + a.ca + rar(a)}; })};
+    });
+    row('Armadura', makeSelect(groups, e.armadura, 'Sin armadura', function(v){ change(function(){ e.armadura = v; }); }));
+    var info = armorInfo(mod);
+    if(info.armor){
+      var ar = info.armor;
+      sE.appendChild(detailBox('<dl class="ficha-dl"><dt>Categoría</dt><dd>' + EQ_CAT_LABEL[ar.categoria] + ' · ' + PROF_LABEL[info.rank].toLowerCase() + '</dd>' +
+        '<dt>CA</dt><dd>+' + ar.ca + (ar.destrezaMax !== null ? ' · Destreza máx. +' + ar.destrezaMax : '') + '</dd>' +
+        (ar.fuerza ? '<dt>Fuerza</dt><dd>' + fmtMod(ar.fuerza) + (info.meets ? ' (la cumples)' : ' (no la cumples)') + '</dd>' : '') +
+        (ar.penalizador ? '<dt>Penalizador</dt><dd>' + ar.penalizador + ' a pruebas' + (info.meets ? ' (no se aplica: cumples la Fuerza)' : '') + '</dd>' : '') +
+        (ar.velocidad ? '<dt>Velocidad</dt><dd>' + ar.velocidad + ' pies' + (info.meets ? ' (' + info.speedPen + ' al cumplir la Fuerza)' : '') + '</dd>' : '') +
+        (ar.rasgos.length ? '<dt>Rasgos</dt><dd>' + escapeHtml(ar.rasgos.join(', ')) + '</dd>' : '') + '</dl>' +
+        (info.rank === 0 ? '<p class="ficha-note">No estás entrenado en esta armadura: no sumas competencia a la CA.</p>' : '')));
+      row('Runa de potencia', numSelect(e.armaduraPotencia, 3, function(n){ return n ? '+' + n + ' a la CA' : 'Sin runa'; }, function(n){ e.armaduraPotencia = n; }));
+      row('Runa de resistencia', numSelect(e.resistencia, 3, function(n){ return n ? ['','Resistente','Resistente mayor','Resistente superior'][n] + ' (+' + n + ' salvaciones)' : 'Sin runa'; }, function(n){ e.resistencia = n; }));
+    }
+    // Escudo
+    row('Escudo', makeSelect(D.escudos.map(function(s){ return {value:s.id, label:s.nombre + ' — CA +' + s.ca + ', dureza ' + s.dureza + rar(s)}; }), e.escudo, 'Sin escudo', function(v){ change(function(){ e.escudo = v; }); }));
+    // Armas
+    sE.appendChild(el('div','ficha-boost-label','Armas'));
+    var wGroups = ['sinArmas','simple','marcial','avanzada'].map(function(cat){
+      return {group: 'Armas ' + EQ_CAT_LABEL[cat] + ' (' + PROF_LABEL[eqRank(cat)].toLowerCase() + ')',
+              items: D.armas.filter(function(w){ return w.categoria === cat; }).map(function(w){ return {value:w.id, label:w.nombre + ' — ' + w.dado + ' ' + (w.tipoDano||'') + rar(w)}; })};
+    });
+    e.armas.forEach(function(slot, i){
+      var w = findBy(D.armas, 'id', slot.id);
+      var r = el('div','ficha-weapon');
+      var top = el('div','ficha-slot');
+      top.appendChild(makeSelect(wGroups, slot.id, 'Elige arma…', function(v){ change(function(){ if(v) slot.id = v; else e.armas.splice(i,1); }); }));
+      top.appendChild(makeSelect([{value:'1',label:'+1'},{value:'2',label:'+2'},{value:'3',label:'+3'}], slot.potencia ? String(slot.potencia) : null, 'Potencia +0', function(v){ change(function(){ slot.potencia = parseInt(v||'0',10); }); }));
+      top.appendChild(makeSelect([{value:'1',label:'Golpe (2 dados)'},{value:'2',label:'Golpe mayor (3 dados)'},{value:'3',label:'Golpe superior (4 dados)'}], slot.golpe ? String(slot.golpe) : null, 'Sin runa de golpe', function(v){ change(function(){ slot.golpe = parseInt(v||'0',10); }); }));
+      var del = el('button','char-btn danger ficha-del','Quitar');
+      del.addEventListener('click', function(){ change(function(){ e.armas.splice(i,1); }); });
+      top.appendChild(del);
+      r.appendChild(top);
+      if(w){
+        var k = weaponCalc(w, slot, mod);
+        r.appendChild(el('div','ficha-weapon-calc',
+          '<span class="ficha-weapon-atk">' + fmtMod(k.atk) + ' <small>(' + fmtMod(k.atk - k.map[0]) + ' / ' + fmtMod(k.atk - k.map[1]) + ')</small></span>' +
+          '<span class="ficha-weapon-dmg">' + escapeHtml(k.dmg) + ' ' + escapeHtml(DMG_LABEL[w.tipoDano] || w.tipoDano || '') + '</span>' +
+          '<span class="ficha-note">' + escapeHtml([w.tipo === 'distancia' ? 'Distancia' + (w.alcance ? ' ' + w.alcance + ' pies' : '') : 'Cuerpo a cuerpo', 'Manos ' + w.manos, w.grupo].concat(w.rasgos).filter(Boolean).join(' · ')) +
+          (k.rank === 0 ? ' · <b>no entrenado</b>' : '') + '</span>'));
+      }
+      sE.appendChild(r);
+    });
+    var add = el('button','char-btn ficha-add','+ Añadir arma');
+    add.addEventListener('click', function(){ change(function(){ e.armas.push({id: 'Fist', potencia:0, golpe:0}); }); });
+    sE.appendChild(add);
+    sE.appendChild(el('div','ficha-note','Ataque: competencia + Fuerza (Destreza a distancia o con sutil) + runa de potencia. Entre paréntesis, el 2.º y 3.er ataque. El daño incluye Fuerza (cuerpo a cuerpo y arrojadizas; la mitad con propulsión) y la especialización en armas.'));
+    main.appendChild(sE);
+  }
+
+  // ---- Conjuros de la clase ----
+  var TRAD_KEY = {'Arcana':'Arcano','Divina':'Divino','Ocultista':'Ocultista','Primigenia':'Primigenio'};
+  function slotNum(raw){
+    var n = 0; String(raw || '').replace(/\d+/g, function(x){ n += parseInt(x, 10); return x; });
+    return n;
+  }
+  function casterInfo(){
+    var c = fClase();
+    if(!c || !c.lanzamiento || !c.tradicion || !c.tradicion.length) return null;
+    var trad = (ficha.tradicion && c.tradicion.indexOf(ficha.tradicion) !== -1) ? ficha.tradicion : (c.tradicion.length === 1 ? c.tradicion[0] : null);
+    var slots = c.lanzamiento.espacios[String(ficha.nivel)] || {};
+    var espontaneo = c.lanzamiento.tipo === 'espontaneo';
+    var ranks = Object.keys(slots).map(Number).sort(function(a,b){ return a-b; });
+    return {clase: c, trad: trad, key: trad ? TRAD_KEY[trad] : null, slots: slots, ranks: ranks,
+            tipo: c.lanzamiento.tipo, espontaneo: espontaneo,
+            marca: espontaneo ? 'aprendidos' : 'preparados', maxRank: ranks.length ? ranks[ranks.length-1] : 0};
+  }
+  // Conjuros marcados (✓ preparados o ✦ aprendidos según el tipo de lanzador) de la tradición, por rango
+  function markedSpellsByRank(ci){
+    var marks = ci.espontaneo ? known : prepared;
+    var by = {}, fuera = 0;
+    SPELLS.forEach(function(sp){
+      if(!marks[sp.id]) return;
+      if(sp.school !== ci.key){ fuera++; return; }
+      (by[sp.rank] = by[sp.rank] || []).push(sp);
+    });
+    Object.keys(by).forEach(function(r){ by[r].sort(function(a,b){ return a.name.localeCompare(b.name,'es'); }); });
+    return {by: by, fuera: fuera};
+  }
+  function rankLabel(r){ return r === 0 ? 'Trucos' : (RANK_NAMES[r] || ('Rango ' + r)); }
+
+  function goToSpells(key){
+    currentSchool = key;
+    var nav = document.getElementById('schoolNav');
+    Array.prototype.forEach.call(nav.children, function(b){ b.classList.toggle('active', b.dataset.key === key); });
+    var tab = document.querySelector('#mainTabs [data-tab="spells"]');
+    if(tab) tab.click(); else render();
+    window.scrollTo(0, 0);
+  }
+
+  function renderConjurosSection(main){
+    var c = fClase();
+    if(!c || !c.lanzamiento) return;
+    var sS = section('Conjuros');
+    var ci = casterInfo();
+    if(c.tradicion.length > 1){
+      var row = el('div','ficha-slot');
+      row.appendChild(el('span','ficha-slot-l','Tradición'));
+      row.appendChild(makeSelect(c.tradicion.map(function(t){ return {value:t, label:t}; }), ci && ci.trad, 'Elige tradición…', function(v){ change(function(){ ficha.tradicion = v; }); }));
+      sS.appendChild(row);
+      sS.appendChild(el('div','ficha-note','Tu tradición depende de tu ' + (c.subclases[0] ? c.subclases[0].etiqueta.toLowerCase() : 'elección de clase') + '.'));
+    }
+    if(!ci || !ci.trad){ main.appendChild(sS); return; }
+    var info = el('div','ficha-level-f',
+      'Lanzador ' + (ci.tipo === 'mixto' ? 'preparado y espontáneo' : (ci.espontaneo ? 'espontáneo (repertorio)' : 'preparado')) +
+      ' · tradición ' + escapeHtml(ci.trad.toLowerCase()) + ' · rango máximo ' + ci.maxRank + '. ' +
+      (ci.espontaneo ? 'Marca con ✦ (aprendido) los conjuros de tu repertorio.' : 'Marca con ✓ (preparado) los conjuros que preparas hoy.'));
+    sS.appendChild(info);
+    var mk = markedSpellsByRank(ci);
+    var table = el('div','ficha-slots-table');
+    ci.ranks.forEach(function(r){
+      var total = slotNum(ci.slots[r]);
+      var list = mk.by[r] || [];
+      var over = list.length > total;
+      var rowEl = el('div','ficha-slots-row' + (over ? ' over' : (list.length === total ? ' full' : '')));
+      rowEl.innerHTML = '<span class="ficha-slots-r">' + escapeHtml(rankLabel(r)) + '</span>' +
+        '<span class="ficha-slots-n">' + list.length + ' / ' + escapeHtml(String(ci.slots[r])) + '</span>' +
+        '<span class="ficha-slots-l">' + (list.length ? list.map(function(sp){ return escapeHtml(sp.name); }).join(', ') : '<em>—</em>') + '</span>';
+      table.appendChild(rowEl);
+    });
+    sS.appendChild(table);
+    var extraRanks = Object.keys(mk.by).map(Number).filter(function(r){ return ci.ranks.indexOf(r) === -1; });
+    if(extraRanks.length) sS.appendChild(el('div','ficha-note','Tienes conjuros ' + ci.marca + ' de rangos que aún no puedes lanzar: ' + extraRanks.map(rankLabel).join(', ') + '.'));
+    if(mk.fuera) sS.appendChild(el('div','ficha-note', mk.fuera + ' conjuro(s) ' + ci.marca + ' son de otra tradición y no cuentan aquí.'));
+    if(/[*†]/.test(JSON.stringify(ci.slots))) sS.appendChild(el('div','ficha-note','* y †: espacios especiales de la clase (por ejemplo, la fuente divina del clérigo o el conjuro de 10.º rango); consulta los rasgos de clase.'));
+    var go = el('button','char-btn ficha-add','Ir a los conjuros ' + ({Arcano:'arcanos', Divino:'divinos', Ocultista:'ocultistas', Primigenio:'primigenios'}[ci.key]));
+    go.addEventListener('click', function(){ goToSpells(ci.key); });
+    sS.appendChild(go);
+    main.appendChild(sS);
+  }
+
+  // Aviso en la pestaña Conjuros con los espacios del personaje
+  function spellsCasterBanner(main){
+    var ci = casterInfo();
+    if(!ci || !ci.key || ci.key !== currentSchool || gameMode === 'sf') return null;
+    var mk = markedSpellsByRank(ci);
+    var parts = ci.ranks.map(function(r){ return (r === 0 ? 'trucos' : r + '.º') + ' ' + (mk.by[r] || []).length + '/' + ci.slots[r]; });
+    var box = el('div','ficha-caster-bar',
+      '<b>' + escapeHtml(activeCharacter) + '</b> · ' + escapeHtml(ci.clase.nombre) + ' de nivel ' + ficha.nivel +
+      ' · ' + escapeHtml(ci.marca) + ': ' + escapeHtml(parts.join(' · ')));
+    main.appendChild(box);
+    return {ci: ci, mk: mk};
   }
 
   // ---- Exportar / importar la ficha ----
@@ -1822,6 +2263,7 @@
     if(!prepared[id]) delete prepared[id];
     savePrepared(prepared);
     updatePrepCount();
+    refreshCasterCounts();
   }
   function toggleFeat(id){
     chosenFeats[id] = !chosenFeats[id];
@@ -1834,6 +2276,11 @@
     if(!known[id]) delete known[id];
     saveKnown(known);
     updateKnownCount();
+    refreshCasterCounts();
+  }
+  function refreshCasterCounts(){
+    if(mainTab !== 'spells' || !document.querySelector('.ficha-caster-bar')) return;
+    var y = window.scrollY; render(); window.scrollTo(0, y);
   }
 
   function matchesQuery(sp){
@@ -2176,6 +2623,7 @@
     banner.className = 'school-banner';
     banner.innerHTML = '<div class="icon">'+schoolDef.glyph+'</div><div><h2>Conjuros '+schoolDef.label+'</h2><p>'+schoolDef.tagline+'</p></div>';
     main.appendChild(banner);
+    var casterBar = spellsCasterBanner(main);
 
     var pool = SPELLS.filter(function(sp){ return sp.school === currentSchool; })
                       .filter(function(sp){ return gameMode === 'sf' || sp.source !== 'Starfinder'; })
@@ -2205,7 +2653,14 @@
 
       var title = document.createElement('div');
       title.className = 'rank-title';
-      title.innerHTML = (r===0 ? 'Trucos' : 'Conjuros de ' + RANK_NAMES[r]) + ' <span class="count">('+atRank.length+')</span>';
+      var slotTxt = '';
+      if(casterBar){
+        var slotRaw = casterBar.ci.slots[r];
+        var nMarked = (casterBar.mk.by[r] || []).length;
+        slotTxt = slotRaw ? ' <span class="count ficha-rank-slots">· ' + casterBar.ci.marca + ' ' + nMarked + '/' + slotRaw + '</span>'
+                          : ' <span class="count ficha-rank-slots out">· aún no puedes lanzar este rango</span>';
+      }
+      title.innerHTML = (r===0 ? 'Trucos' : 'Conjuros de ' + RANK_NAMES[r]) + ' <span class="count">('+atRank.length+')</span>' + slotTxt;
       section.appendChild(title);
 
       var ul = document.createElement('ul');
